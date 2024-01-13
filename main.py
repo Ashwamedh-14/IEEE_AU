@@ -7,6 +7,8 @@ def main():
                       user = data['user'],
                       password = data['password'],
                       database = data['database'])
+    curr = con.cursor()
+    curr.close()
     con.close()
 
 
