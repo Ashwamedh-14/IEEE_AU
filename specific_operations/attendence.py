@@ -131,4 +131,7 @@ def update_attendence(curr: cursor.MySQLCursor, empid: str, date: str, upd: str)
     curr.execute('update attendence set presence = %s, reason = %s where date = %s and emp_id = %s',
                  (upd, reason, date, empid))
     print("Attendence successfully update")
+
+def attend_main():
+    ...
     
