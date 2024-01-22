@@ -1,15 +1,14 @@
 import datetime as dt
-import cleaning as clean
 
 class Person:
-    def __init__(self, name: str, DOB: str | dt.datetime):
+    def __init__(self, name: str, DOB: str | dt.date):
         '''DOB must be in YYYY-MM-DD format'''
-        if type(name) != str or type(DOB) not in (str, dt.datetime):
+        if type(name) != str or (type(DOB) not in (str, dt.date) and DOB != None):
             raise TypeError("Incorrect types passed to name or DOB")
 
         self.name: str = (name.strip()).title()
         if type(DOB) == str:
-            self.DOB: dt.datetime = dt.datetime.strptime(clean.clean_string(DOB), r"%Y-%m-%d")
+            self.DOB: dt.datetime = dt.datetime.strptime(DOB.strip(), r"%Y-%m-%d")
         else:
             self.DOB: dt.datetime = DOB
 
@@ -56,20 +55,19 @@ class Person:
         self.name = (name.strip()).title()
 
     def set_DOB(self, DOB: str | dt.datetime):
-        if DOB not in (str, dt.datetime):
-            raise ValueError("Incorrect type passed to DOB")
-
         '''
         DOB should be in YYYY-MM-DD format
         '''
-        if type(DOB) == str:
-            self.DOB: dt.datetime = dt.datetime.strptime(clean.clean_string(DOB), r"%Y-%m-%d")
+        if DOB not in (str, dt.datetime):
+            raise ValueError("Incorrect type passed to DOB")
+        elif type(DOB) == str:
+            self.DOB: dt.datetime = dt.datetime.strptime(DOB.strip(), r"%Y-%m-%d")
         else:
             self.DOB: dt.datetime = DOB
     
 
 class User(Person):
-    def __init__(self, name: str, DOB: str | dt.datetime, user_id: str, password: str, phno: int = None, email: str = None):
+    def __init__(self, name: str, DOB: str | dt.date, user_id: str, password: str, phno: int = None, email: str = None):
         super().__init__(name, DOB)
         if type(phno) == str and (phno.strip()).lower() == 'null':
             phno = None
@@ -113,7 +111,7 @@ class User(Person):
 
 
 class Administrator(Person):
-    def __init__(self, name: str, DOB: str | dt.datetime, security_key: str | int):
+    def __init__(self, name: str, DOB: str | dt.date, security_key: str | int):
         super().__init__(name, DOB)
         if type(security_key) == int:
             self.security_key: str | int = security_key
@@ -130,11 +128,11 @@ class Administrator(Person):
             self.security_key = security_key.strip()
 
 class Employee(Person):
-    def __init__(self, name: str, DOB: str | dt.datetime, emp_ID: str, DOJ: str | dt.datetime, role: str):
+    def __init__(self, name: str, DOB: str | dt.date, emp_ID: str, DOJ: str | dt.date, role: str):
         super().__init__(name, DOB)
-        if type(emp_ID) != str or type(DOJ) not in (str, dt.datetime) or type(role) != str:
+        if type(emp_ID) != str or type(DOJ) not in (str, dt.date) or type(role) != str:
             raise TypeError("Incorrect types passed to arguments, emp_ID, DOJ or role")
-        self.emp_ID: str = clean.clean_string(emp_ID)
+        self.emp_ID: str = emp_ID.strip()
         if type(DOJ) == str:
             self.DOJ: dt.datetime = dt.datetime.strptime(DOJ, r"%Y-%m-%d")
         else:
@@ -142,7 +140,7 @@ class Employee(Person):
         if role == '':
             role = None
         else:
-            self.role: str = clean.clean_string(role)
+            self.role: str = role.strip()
 
     def get_empID(self) -> str:
         return self.emp_ID
@@ -150,10 +148,10 @@ class Employee(Person):
     def get_DOJ_str(self, processing: bool = False) ->str:
         if type(processing) != bool:
             raise ValueError("Processing should be of type bool")
-        if bool:
+        if processing:
             return self.DOJ.strftime(r"%Y-%m-%d")
         else:
-            return self.DOJ.strftime(r"%d-%m-%Y")
+            return self.DOJ.strftime(r"%d-%B-%Y")
     
     def get_DOJ_dt(self):
         return self.DOJ
@@ -164,17 +162,17 @@ class Employee(Person):
     def set_empID(self, empID: str):
         if type(empID) != str:
             raise TypeError("Incorrect type passed")
-        self.emp_ID: str = clean.clean_string(empID)
+        self.emp_ID: str = empID.strip()
 
     def set_DOJ(self, DOJ: str | dt.datetime):
         if type(DOJ) not in (str, dt.datetime):
             raise TypeError("DOJ should be either string or datetime object")
         if type(DOJ) == str:
-            self.DOJ: dt.datetime = dt.datetime.strptime(clean.clean_string(DOJ), r"%Y-%m-%d")
+            self.DOJ: dt.datetime = dt.datetime.strptime(DOJ.strip(), r"%Y-%m-%d")
         else:
             self.DOJ = DOJ
     
     def set_role(self, role: str):
         if type(role) not in (str, None):
             raise TypeError("Role should be a string")
-        self.role = clean.clean_string(role)
+        self.role = role.strip()
