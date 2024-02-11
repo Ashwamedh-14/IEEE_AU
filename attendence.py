@@ -1,43 +1,9 @@
-from mysql.connector import connection, cursor, errors
+from mysql.connector import connection, cursor
 from datetime import datetime
 
 from Support_Files.Person import Employee
 import Support_Files.cleaning as clean
-
-def print_box(Data: list[tuple], maxlen: tuple[int], tuple_size: int):
-    '''
-    To print a box around data to give some semblence to structure
-    It is assumed all tuples in data are in equal length
-    It is also assumed that all the values in maxlen correspond to max length of each data in each tuple 
-    of the list
-    '''
-    
-    head = Data[0]
-    for j in range(tuple_size):
-        print('+' + '-' * (maxlen[j] + 2), end = '')
-    print('+')
-    for i in range(tuple_size):
-        space: int = maxlen[i] + 2
-        print('|' + f'{head[i]:^{space}}', end = '')
-    print('|')
-    for j in range(tuple_size):
-        print('+' + '-' * (maxlen[j] + 2), end = '')
-    print('+')
-
-    Data = Data[1:]
-    for i in Data:
-        for j in range(tuple_size):
-            space = maxlen[j] + 2
-            print('|' + f'{i[j]:^{space}}', end = '')
-        print('|')
-
-    for j in range(tuple_size):
-        space = maxlen[j] + 2
-        print('+' + '-' * space, end = '')
-    print('+')
-
-
-
+from Support_Files.printing import print_box
 
 def put_emp_data(data_list: list[tuple[str | int | datetime]]) -> list[Employee]:
     l = []
@@ -52,34 +18,53 @@ def take_attendence(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
     emp_list: list[Employee] = put_emp_data(emp_list)
     curr.execute("select date(now())")
     date: datetime = curr.fetchone()[0]
+
+    while True:
+        event: str = input("Enter the Event ID: ")
+        if event.isnumeric():
+            print("There is no distinction. Please provide")
+            continue
+        curr.execute('select event_id from events where event_id = %s', (event,))
+        res = curr.fetchone()
+        if res == None:
+            print("Event ID does not exist")
+            continue
+        break
+    print()
     print(f"Today's date: {date:%d %B %Y}")
 
-    try:
-        print(f"{'Student ID':<12}{"Student Name":<40}{"Student Role":<22}{"Presence":<10}")
-        for i in emp_list:
-            role = curr.execute(f"select role_name from role where role_id = '{i.get_role()}'")
+    print(f"{'Student ID':<12}{"Student Name":<40}{"Student Role":<22}{"Presence":<10}")
+    i = 0
+    while i != len(emp_list):
+        try:
+            role = curr.execute(f"select role_name from role where role_id = '{emp_list[i].get_role()}'")
             role = curr.fetchone()[0]
-            presence = input(f"{i.get_empID():<12}{i.get_name():<40}{role:<22}")
+            presence = input(f"{emp_list[i].get_empID():<12}{emp_list[i].get_name():<40}{role:<22}")
         
             presence = presence.title().strip()
             if presence not in ('A', 'P', 'Absent', 'Present'):
                 raise ValueError("Attendence is only accepted in A/P format")
+            presence = presence[0]
             reason = None
+            
             if presence == "A":
-                reason = input("What is the reason\n")
+                reason = input("What is the reason\n").strip()
                 print()
+            if type(reason) == str and reason.isnumeric():
+                raise ValueError("Kya kar rha hai re. Valid reason only, not number nonsense")
             if reason == '':
                 reason = "No specific reason"
 
-            curr.execute("insert into attendence values(%s, %s, %s, %s)", (date.strftime(r"%Y-%m-%d"),
-                         i.get_empID(), presence, reason))
+            curr.execute("insert into attendence values(%s, %s, %s, %s, %s)", (date.strftime(r"%Y-%m-%d"),
+                         emp_list[i].get_empID(), presence, reason, event))
 
-    except Exception as e:
-        print("The following error occurred", repr(e), sep = '\n')
-        print("To fill attendence again, kindly pick the option again\n")
-        print()
-        con.rollback()
-        return
+        except Exception as e:
+            print()
+            print("The following error occurred", repr(e), sep = '\n')
+            print("To fill attendence again, kindly pick the option again\n")
+            print()
+            continue
+        i += 1
 
     while True:
         save = input("Save attendence: ").title().strip()
@@ -119,28 +104,33 @@ def list_attendence(curr:cursor.MySQLCursor, emp_id: str):
             return
         emp = Employee(data[1], data[2], data[0], data[4], data[3])
         perc = count_attendence(curr, emp)
-        curr.execute('select Date, Presence from Attendence where emp_id = %s order by emp_id', (emp.get_empID(),))
+        curr.execute('''select A.Date, A.Presence, E.event_name from Attendence A natural join Events E where emp_id = %s order by emp_id'''
+                     , (emp.get_empID(),))
         d = curr.fetchall()
         if d != []:
-            data = [("Date", "Attendence")]
+            data = [("Date", "Attendence", "Event")]
             data.extend(d)
             for i in range(1, len(data)):
-                data[i]: tuple[str, str] = data[i][0].strftime('%d-%m-%Y'), data[i][1]
+                data[i] = data[i][0].strftime(r'%d-%m-%Y'), data[i][1], data[i][2]
         print(f"Name           : {emp.get_name()}")
         print(f"ID             : {emp.get_empID()}")
         print(f"Date of Joining: ", end = '')
 
         try:
-            print(emp.get_DOB_str())
+            print(emp.get_DOJ_str())
         except ValueError:
             print("Not Passed")
+        
+        curr.execute('select max(length(E.event_name)) from attendence A natural join events E where A.emp_id = %s',
+                     (emp.get_empID(),))
+        length:int = curr.fetchone()[0]
         
         print(f"Attendence %   : {perc}")
         if d == []:
             print("Meeting not yet conducted")
         else:
-            print_box(data, (10, 10), 2)
-    except Exception as e:
+            print_box(data, (10, 10, length), 3)
+    except ValueError as e:
         print("The following exception occured:", repr(e), sep = '\n')
         print()
 
