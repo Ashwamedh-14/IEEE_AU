@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
 class Event:
     def __init__(self, event_id: str, event_title: str, date: str | datetime, event_description: str | None = None, 

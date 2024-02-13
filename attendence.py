@@ -2,7 +2,7 @@ from mysql.connector import connection, cursor
 from datetime import datetime
 
 from Support_Files.Person import Employee
-import Support_Files.cleaning as clean
+from Support_Files import cleaning as clean
 from Support_Files.printing import print_box
 
 def put_emp_data(data_list: list[tuple[str | int | datetime]]) -> list[Employee]:
@@ -42,14 +42,18 @@ def take_attendence(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
             presence = input(f"{emp_list[i].get_empID():<12}{emp_list[i].get_name():<40}{role:<22}")
         
             presence = presence.title().strip()
-            if presence not in ('A', 'P', 'Absent', 'Present'):
+            if presence not in ('A', 'P', 'Absent', 'Present', 'N/A', 'No'):
                 raise ValueError("Attendence is only accepted in A/P format")
             presence = presence[0]
             reason = None
             
+            if presence == 'N/A' or presence == 'No':           #If the person is not supposed to be there for that event
+                continue
+            
             if presence == "A":
                 reason = input("What is the reason\n").strip()
                 print()
+
             if type(reason) == str and reason.isnumeric():
                 raise ValueError("Kya kar rha hai re. Valid reason only, not number nonsense")
             if reason == '':

@@ -2,7 +2,7 @@ from mysql.connector import connect
 from pickle import load
 from time import sleep
 
-import attendence as attendence
+import attendence
 
 
 def main():
