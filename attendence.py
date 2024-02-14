@@ -178,7 +178,11 @@ def attend_main(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
         print('\n')
         
         if ch == 1:
-            take_attendence(con, curr)
+            try:
+                take_attendence(con, curr)
+            except KeyboardInterrupt:
+                print('\n')
+
         
         elif ch == 2:
             empid = input("Enter the id of the person: ")

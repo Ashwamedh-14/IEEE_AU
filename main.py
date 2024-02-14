@@ -10,6 +10,7 @@ def main():
         #Aesthetics only
         print("Turning on systems")
         print("Connecting with database....")
+        sleep(5)
 
         #inputing database details from binary file
         try:
@@ -61,6 +62,7 @@ def main():
         con.close()
         print("Closing Database")
         print("Switching off systems...")
+        sleep(5)
 
 
 #function call
