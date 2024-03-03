@@ -6,7 +6,7 @@ class Event:
         '''
         Formate for date is dd-mm-YYYY
         '''
-        
+       
         #Data cleaning for event_id
         if type(event_id) != str:
             raise TypeError("Event_ID should be a string")

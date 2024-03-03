@@ -13,7 +13,7 @@ from Support_Files.printing import print_box
 
 #Setting Up the Logger
 LOG_FORMAT = logging.Formatter("%(asctime)s: %(levelname)s: %(filename)s: %(funcName)s\n%(message)s\n")
-file_handle = handlers.TimedRotatingFileHandler(r"logs/Attendence.log", "W6")
+file_handle = handlers.TimedRotatingFileHandler("../logs/Attendence.log", "W6")
 file_handle.setFormatter(LOG_FORMAT)
 file_handle.setLevel(logging.DEBUG)
 
@@ -149,7 +149,6 @@ def list_attendence(curr:cursor.MySQLCursor, emp_id: str):
             print(f"No attendence taken for {emp_id}")
             return
         emp = Employee(data[1], data[2], data[0], data[4], data[3])
-        perc = count_attendence(curr, emp)
         curr.execute('''select A.Date, A.Presence, E.event_name from Attendence A natural join Events E where emp_id = %s order by emp_id'''
                      , (emp.get_empID(),))
         d = curr.fetchall()
@@ -161,6 +160,12 @@ def list_attendence(curr:cursor.MySQLCursor, emp_id: str):
                 data[i] = data[i][0].strftime(r'%d-%m-%Y'), data[i][1], data[i][2]
         print(f"Name           : {emp.get_name()}")
         print(f"ID             : {emp.get_empID()}")
+        print(f"Date of Birth:   ", end = '')
+        try:
+            print(emp.get_DOB_str())
+        except ValueError:
+            print("Not Passed")
+
         print(f"Date of Joining: ", end = '')
 
         try:
@@ -173,10 +178,11 @@ def list_attendence(curr:cursor.MySQLCursor, emp_id: str):
         length:int = curr.fetchone()[0]
         logger.info(f"Length of longest Event Name {emp.get_name()} was in = {length}")
         
-        print(f"Attendence %   : {perc}")
         if d == []:
             print("Meeting not yet conducted")
         else:
+            perc = count_attendence(curr, emp)
+            print(f"Attendence %   : {perc}")
             print_box(data, (10, 10, length), 3)
     except ValueError as e:
         print("The following exception occured:", repr(e), sep = '\n')

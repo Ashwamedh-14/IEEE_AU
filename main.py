@@ -8,7 +8,7 @@ from logging import handlers
 from mysql.connector import connect
 
 #self defined modules
-import attendence
+import src.attendence as attendence
 
 #Setting up the logger
 LOG_FORMAT = logging.Formatter("%(asctime)s: %(levelname)s: %(filename)s\n%(message)s\n") #Specifying the format of output log
