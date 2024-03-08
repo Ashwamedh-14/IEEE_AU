@@ -16,6 +16,9 @@ class Person:
         else:
             self.DOB: dt.datetime = DOB
 
+        if food_preference == None:
+            self.food_preference: int = 6
+
         for i, j in FOOD.items():
             if food_preference.lower() == j.lower():
                 self.food_preference: int = i
