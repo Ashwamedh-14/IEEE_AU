@@ -7,7 +7,7 @@ FOOD: dict[int: str] = {1: "Non-Vegetarian", 2: "Vegetarian (With Onion and Garl
 class Person:
     def __init__(self, name: str, DOB: str | dt.date, food_preference: str):
         '''DOB must be in YYYY-MM-DD format'''
-        if type(name) != str or (type(DOB) not in (str, dt.date) and DOB != None) or type(food_preference) != str:
+        if type(name) != str or (type(DOB) not in (str, dt.date) and DOB != None) or (food_preference != None and type(food_preference) != str):
             raise TypeError("Incorrect types passed to name or DOB")
 
         self.name: str = (name.strip()).title()
@@ -17,7 +17,7 @@ class Person:
             self.DOB: dt.datetime = DOB
 
         for i, j in FOOD.items():
-            if food_preference.lower == j.lower():
+            if food_preference.lower() == j.lower():
                 self.food_preference: int = i
                 break
         else:
