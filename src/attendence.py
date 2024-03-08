@@ -57,6 +57,7 @@ def take_attendence(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
             continue
         break
     print()
+    print("Type P for Present, A for Absent or N/A, No for not required")
     print(f"Today's date: {date:%d %B %Y}")
 
     print(f"{'Student ID':<12}{"Student Name":<40}{"Student Role":<22}{"Presence":<10}")
@@ -75,7 +76,7 @@ def take_attendence(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
             presence = presence[0]
             reason = None
             
-            if presence == 'N/A' or presence == 'No':           #If the person is not supposed to be there for that event
+            if presence == 'N':          #If the person is not supposed to be there for that event
                 continue
             
             if presence == "A":                                 #If the person is absent on the event

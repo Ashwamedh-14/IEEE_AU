@@ -18,6 +18,7 @@ class Person:
 
         if food_preference == None:
             self.food_preference: int = 6
+            return
 
         for i, j in FOOD.items():
             if food_preference.lower() == j.lower():
