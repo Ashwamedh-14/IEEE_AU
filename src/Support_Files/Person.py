@@ -1,9 +1,13 @@
 import datetime as dt
 
+FOOD: dict[int: str] = {1: "Non-Vegetarian", 2: "Vegetarian (With Onion and Garlic)",
+        3: "Vegetarian (Without Onion and Garlic)", 4: "Jain",
+        5: "Vegan",6: "Unknown"
+        }
 class Person:
-    def __init__(self, name: str, DOB: str | dt.date):
+    def __init__(self, name: str, DOB: str | dt.date, food_preference: str):
         '''DOB must be in YYYY-MM-DD format'''
-        if type(name) != str or (type(DOB) not in (str, dt.date) and DOB != None):
+        if type(name) != str or (type(DOB) not in (str, dt.date) and DOB != None) or type(food_preference) != str:
             raise TypeError("Incorrect types passed to name or DOB")
 
         self.name: str = (name.strip()).title()
@@ -11,6 +15,14 @@ class Person:
             self.DOB: dt.datetime = dt.datetime.strptime(DOB.strip(), r"%Y-%m-%d")
         else:
             self.DOB: dt.datetime = DOB
+
+        for i, j in FOOD.items():
+            if food_preference.lower == j.lower():
+                self.food_preference: int = i
+                break
+        else:
+            self.food_preference: int = 6
+
 
     def __str__(self) -> str:
         return f"Hi, I am {self.name} and was born on {self.DOB}"
@@ -48,6 +60,9 @@ class Person:
             return today.year - self.DOB.year - 1
         else: 
             return today.year - self.DOB.year
+        
+    def get_food_choice(self) -> str:
+        return FOOD[self.food_preference]
     
     def set_name(self, name: str):
         if type(name) != str:
@@ -65,6 +80,16 @@ class Person:
         else:
             self.DOB: dt.datetime = DOB
     
+    def set_food_choice(self, food_preference: str):
+        if food_preference == None or type(food_preference) != str:
+            self.food_preference: int = 6
+            return
+        for i, j in FOOD.items():
+            if food_preference.lower == j.lower():
+                self.food_preference: int = i
+                break
+        else:
+            self.food_preference: int = 6
 
 class User(Person):
     def __init__(self, name: str, DOB: str | dt.date, user_id: str, password: str, phno: int = None, email: str = None):
@@ -128,11 +153,11 @@ class Administrator(Person):
             self.security_key = security_key.strip()
 
 class Employee(Person):
-    def __init__(self, name: str, DOB: str | dt.date, emp_ID: str, DOJ: str | dt.date, role: str):
-        super().__init__(name, DOB)
-        if type(emp_ID) != str or type(DOJ) not in (str, dt.date) or type(role) != str:
-            raise TypeError("Incorrect types passed to arguments, emp_ID, DOJ or role")
-        self.emp_ID: str = emp_ID.strip()
+    def __init__(self, name: str, DOB: str | dt.date, emp_ID: str, DOJ: str | dt.date, role: str, contant_no: int, email: str, food_preference: str):
+        super().__init__(name, DOB,food_preference)
+        if type(emp_ID) != str or type(DOJ) not in (str, dt.date) or type(role) != str or type(contant_no) != int or type(email) != str:
+            raise TypeError("Incorrect types passed to arguments, emp_ID, DOJ, role, contact_no or email")
+        self.emp_ID: str = emp_ID.strip().upper()
         if type(DOJ) == str:
             self.DOJ: dt.datetime = dt.datetime.strptime(DOJ, r"%Y-%m-%d")
         else:
@@ -140,7 +165,17 @@ class Employee(Person):
         if role == '':
             role = None
         else:
-            self.role: str = role.strip()
+            self.role: str = role.strip().title()
+        
+        if contant_no // 10 ** 9 in (1,2,3,4,5,6,7,8,9):
+            self.contact: int = contant_no
+        else:
+            self.contact: int = None
+
+        self.email: str = email
+        
+
+        
 
     def __str__(self):
         return f'''Name: {self.name}\nDOB: {self.DOB}\nEmployee ID: {self.emp_ID}\nDate of Joining: {self.DOJ}\nRole: {self.role}'''
@@ -162,6 +197,14 @@ class Employee(Person):
     def get_role(self) -> str | None:
         return self.role
     
+    def get_contact(self) -> int | str:
+        if self.contact == None:
+            return "Contact not given"
+        return self.contact
+    
+    def get_email(self):
+        return self.email
+    
     def set_empID(self, empID: str):
         if type(empID) != str:
             raise TypeError("Incorrect type passed")
@@ -179,3 +222,17 @@ class Employee(Person):
         if type(role) not in (str, None):
             raise TypeError("Role should be a string")
         self.role = role.strip()
+
+    def set_contact(self, contact_no: int):
+        if type(contact_no) != int:
+            raise TypeError("Incorrect type passed to contact no")
+        elif contact_no // 10 ** 9 not in (1,2,3,4,5,6,7,8,9):
+            raise ValueError("Incorrect phone number is passed")
+        else:
+            self.contact: int = contact_no
+
+    def set_email(self, email: str):
+        if type(email) != str:
+            raise TypeError("Incorrect type passed to email")
+        else:
+            self.email = email

@@ -7,13 +7,13 @@ from logging import handlers
 from mysql.connector import connection, cursor, errors
 
 #Self made libraries
-from Support_Files.Person import Employee
-from Support_Files import cleaning as clean
-from Support_Files.printing import print_box
+from src.Support_Files.Person import Employee
+from src.Support_Files import cleaning as clean
+from src.Support_Files.printing import print_box
 
 #Setting Up the Logger
 LOG_FORMAT = logging.Formatter("%(asctime)s: %(levelname)s: %(filename)s: %(funcName)s\n%(message)s\n")
-file_handle = handlers.TimedRotatingFileHandler("../logs/Attendence.log", "W6")
+file_handle = handlers.TimedRotatingFileHandler("./logs/Attendence.log", "W6")
 file_handle.setFormatter(LOG_FORMAT)
 file_handle.setLevel(logging.DEBUG)
 
@@ -27,14 +27,16 @@ def put_emp_data(data_list: list[tuple[str | int | datetime]]) -> list[Employee]
     l = []
     for i in data_list:
         logger.info(f"Data in:\n{i}")
-        emp = Employee(i[1], i[2], i[0], i[4], i[3])
+        emp = Employee(i[1], i[2], i[0], i[4], i[3],i[5], i[6], i[7])
         logger.info(f"Data out:\n{str(emp)}")
         l.append(emp)
     return l
 
 #The Function that takes attendence of the members
 def take_attendence(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
-    curr.execute("SELECT * FROM EMPLOYEES ORDER BY ROLE_ID ")      #Getting the full details of all students
+    curr.execute('''SELECT EMP_ID, CONCAT_WS(' ',First_NAME,SURNAME),
+                 EMP_DOB, ROLE_ID, DOJ, CONTACT_INFO, EMAIL_ID, FOOD_PREFERENCE
+                 FROM EMPLOYEES ORDER BY ROLE_ID ''')      #Getting the full details of all students
     emp_list = curr.fetchall()
     emp_list: list[Employee] = put_emp_data(emp_list)              #Compiling all rows into list of Employee objects
     curr.execute("select date(now())")
@@ -160,12 +162,6 @@ def list_attendence(curr:cursor.MySQLCursor, emp_id: str):
                 data[i] = data[i][0].strftime(r'%d-%m-%Y'), data[i][1], data[i][2]
         print(f"Name           : {emp.get_name()}")
         print(f"ID             : {emp.get_empID()}")
-        print(f"Date of Birth:   ", end = '')
-        try:
-            print(emp.get_DOB_str())
-        except ValueError:
-            print("Not Passed")
-
         print(f"Date of Joining: ", end = '')
 
         try:
@@ -213,7 +209,7 @@ def update_attendence(curr: cursor.MySQLCursor, empid: str, date: str, upd: str)
     curr.execute('update attendence set presence = %s, reason = %s where date = %s and emp_id = %s',
                  (upd, reason, date, empid))
     logger.info(f"Date: {date}, Employee ID: {empid}, Upd: {upd}, Reason: {reason}")
-    print("Attendence successfully update\n")
+    print("Attendence successfully updated\n")
 
 def attend_main(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
     logger.debug("Inside Attendence Module")

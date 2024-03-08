@@ -72,13 +72,17 @@ def display_members(curr: cursor.MySQLCursor, team: int | str | None, hierarchy:
     #In case all members are required
     if team == '*':
         head = ('Student ID', 'Student Name', 'Department')
-        curr.execute(f'''select emp_id, emp_name, role_name 
+        curr.execute(f'''select emp_id, concat_ws(' ',first_name,surname), role_name 
                      from employees natural join role  
                      order by role_id, emp_id''')
         data: list[tuple[str,...]] = [head] + curr.fetchall()
-        curr.execute(f"select max(length(emp_name)) from employee")
+
+        #selecting the maximum length of name in database
+        curr.execute(f"select max(length(concat_ws(' ',first_name,surname)) from employee")
         max_name: int = curr.fetchone()[0]
         logger.info("Maximum length of name is: %s", max_name)
+
+        #selecting maximum length of role_name in database
         curr.execute(f'''select max(length(role_name)) 
                      from role''')
         max_role: int = curr.fetchone()[0]
@@ -88,14 +92,18 @@ def display_members(curr: cursor.MySQLCursor, team: int | str | None, hierarchy:
     #In case only members are required
     elif hierarchy.lower() == 'members':
         head: tuple = ('Member ID', 'Member Name', 'Team')
-        curr.execute(f'''select emp_id, emp_name, role_name
+        curr.execute(f'''select emp_id, concat_ws(' ',first_name,surname), role_name
                      from employees natural join role
                      where lower(role_id) like 'c{TEAM[team][0]}%'
                      order by role_id, emp_id''')
         data: list[tuple[str, ...]] = [head] + curr.fetchall()
-        curr.execute(f'select max(length(emp_name)) from employees where lower(role_id) like "c{TEAM[team][0]}%"')
+        
+        #selecting the maximum length of name in database
+        curr.execute(f'''select max(length(concat_ws(' ',first_name,surname)) from employees where lower(role_id) like "c{TEAM[team][0]}%"''')
         max_name: int = curr.fetchone()[0]
         logger.info(f"Maximum  length of name is {max_name}")
+        
+        #selecting maximum length of role_name in database
         curr.execute(f'''select max(length(role_name)) from role where lower(role_id) like 'c{TEAM[team][0]}' ''')
         max_role: int = curr.fetchone()[0]
         logger.info(f"Maximum length of role_name is: {max_role}")
@@ -103,14 +111,18 @@ def display_members(curr: cursor.MySQLCursor, team: int | str | None, hierarchy:
 
     elif hierarchy.lower() == 'heads':
         head: tuple = ('Head ID', 'Head Name', 'Team')
-        curr.execute(f'''select emp_id, emp_name, role_name
+        curr.execute(f'''select emp_id, concat_ws(' ',first_name,surname), role_name
                      from employees natural join role
                      where lower(role_id) like 'b{TEAM[team][0]}%'
                      order by role_id, emp_id''')
         data: list[tuple[str, ...]] = [head] + curr.fetchall()
-        curr.execute(f'select max(length(emp_name)) from employees where lower(role_id) like "b{TEAM[team][0]}%"')
+        
+        #selecting the maximum length of name in database
+        curr.execute(f'''select max(length(concat_ws(' ',first_name,surname)) from employees where lower(role_id) like "b{TEAM[team][0]}%"''')
         max_name: int = curr.fetchone()[0]
         logger.info(f"Maximum  length of name is {max_name}")
+        
+        #selecting maximum length of role_name in database
         curr.execute(f'''select max(length(role_name)) from role where lower(role_id) like 'b{TEAM[team][0]}' ''')
         max_role: int = curr.fetchone()[0]
         logger.info(f"Maximum length of role_name is: {max_role}")
@@ -118,14 +130,18 @@ def display_members(curr: cursor.MySQLCursor, team: int | str | None, hierarchy:
 
     elif hierarchy.lower() == 'wie':
         head: tuple = ('WIE ID', 'WIE Name', 'Chair')
-        curr.execute('''select emp_id, emp_name, role_name
+        curr.execute('''select emp_id, max(length(concat_ws(' ',first_name,surname)), role_name
                      from employees natural join role
                      where lower(role_id) like 'w%'
                      order by role_id, emp_id''')
         data: list[tuple[str, ...]] = [head] + curr.fetchall()
-        curr.execute(f'select max(length(emp_name)) from employees where lower(role_id) like "w%"')
+        
+        #selecting the maximum length of name in database
+        curr.execute(f'select max(length(concat_ws(' ',first_name,surname)) from employees where lower(role_id) like "w%"')
         max_name: int = curr.fetchone()[0]
         logger.info(f"Maximum  length of name is {max_name}")
+        
+        #selecting maximum length of role_name in database
         curr.execute(f'''select max(length(role_name)) from role where lower(role_id) like 'w%' ''')
         max_role: int = curr.fetchone()[0]
         logger.info(f"Maximum length of role_name is: {max_role}")
@@ -133,14 +149,18 @@ def display_members(curr: cursor.MySQLCursor, team: int | str | None, hierarchy:
         
     elif hierarchy.lower() == 'obs':
         head: tuple = ('OBS ID', 'OBS Name', 'Chair')
-        curr.execute('''select emp_id, emp_name, role_name
+        curr.execute('''select emp_id, max(length(concat_ws(' ',first_name,surname)), role_name
                      from employees natural join role
                      where lower(role_id) like 'a%'
                      order by role_id, emp_id''')
         data: list[tuple[str, ...]] = [head] + curr.fetchall()
-        curr.execute(f'select max(length(emp_name)) from employees where lower(role_id) like "a%"')
+        
+        #selecting the maximum length of name in database
+        curr.execute(f'select max(length(concat_ws(' ',first_name,surname)) from employees where lower(role_id) like "a%"')
         max_name: int = curr.fetchone()[0]
         logger.info(f"Maximum  length of name is {max_name}")
+        
+        #selecting maximum length of role_name in database
         curr.execute(f'''select max(length(role_name)) from role where lower(role_id) like 'a%' ''')
         max_role: int = curr.fetchone()[0]
         logger.info(f"Maximum length of role_name is: {max_role}")
@@ -156,13 +176,15 @@ def display_members(curr: cursor.MySQLCursor, team: int | str | None, hierarchy:
 
 def get_member_details(curr: cursor.MySQLCursor, emp_id: str) -> None:
     try:
-        curr.execute('select * from employees where emp_id = %s', (emp_id,))
+        curr.execute('''select EMP_ID, CONCAT_WS(' ', FIRST_NAME, SURNAME),
+                     EMP_DOB,ROLE_ID, DOJ, CONTACT_INFO, EMAIL_ID, FOOD_PREFERENCE
+                     from employees where emp_id = %s''', (emp_id,))
         data = curr.fetchone()
         logger.info(f"Data obtained from database for {emp_id}:\n{data}")
         if data == None:
             print(f"No attendence taken for {emp_id}")
             return
-        emp = Employee(data[1], data[2], data[0], data[4], data[3])
+        emp = Employee(data[1], data[2], data[0], data[4], data[3],data[5],data[6],data[7])
         print(f"Name           : {emp.get_name()}")
         print(f"ID             : {emp.get_empID()}")
         print(f"Date of Birth  : ", end = '')
@@ -180,6 +202,7 @@ def get_member_details(curr: cursor.MySQLCursor, emp_id: str) -> None:
 
         curr.execute('select role_name from role where role_id = %s', (emp.get_role(),))
         print(f"Role           : {curr.fetchone()[0]}")
+        print(f"Food Preference: {emp.get_food_choice()}")
         
         curr.execute('select count(*) from attendence where emp_id = %s',
                      (emp.get_empID(),))

@@ -29,4 +29,3 @@ def print_box(Data: list[tuple], maxlen: tuple[int], tuple_size: int):
         space = maxlen[j] + 2
         print('+' + '-' * space, end = '')
     print('+')
-
