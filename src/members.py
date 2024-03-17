@@ -275,7 +275,7 @@ def new_member(curr: cursor.MySQLCursor) -> None:
                         logger.error(f"Got error\n{e}\n because {role} was passed as role")
                         print("Kindly enter an integer between 1 and 7 only")
             else:
-                role = input("Enter the role_id of the person").upper().strip()
+                role = input("Enter the role_id of the person: ").upper().strip()
             logger.info(f"Role given: {role}")
             
             curr.execute("insert into employees values(%s, %s, %s, %s, %s, %s)", (emp_id, name, dob, role, doj, contact))
@@ -291,6 +291,15 @@ def new_member(curr: cursor.MySQLCursor) -> None:
             print("Some unknown error occured. Kindly contact your CSE Department")
         print()
         break
+
+def update_member(curr: cursor.MySQLCursor, emp: Employee) -> None:
+    if type(emp) != Employee:
+        logger.error("Employee type was not passed")
+        return
+    print("The student details are: ")
+    print(emp, end = '\n\n')
+    
+    print("Enter the details you want to change")
 
 def members_main(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
     logger.debug("Inside Members Module")

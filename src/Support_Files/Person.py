@@ -182,7 +182,8 @@ class Employee(Person):
         
 
     def __str__(self):
-        return f'''Name: {self.name}\nDOB: {self.DOB}\nEmployee ID: {self.emp_ID}\nDate of Joining: {self.DOJ}\nRole: {self.role}'''
+        return f'''Name: {self.name}\nDOB: {self.DOB}\nEmployee ID: {self.emp_ID}\nDate of Joining: {self.DOJ}\nRole: {self.role}\n
+                Email: {self.email}\nFood Preference: {self.food_preference}'''
 
     def get_empID(self) -> str:
         return self.emp_ID
