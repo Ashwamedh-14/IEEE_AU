@@ -1,9 +1,12 @@
 import datetime as dt
 
-FOOD: dict[int: str] = {1: "Non-Vegetarian", 2: "Vegetarian (With Onion and Garlic)",
-        3: "Vegetarian (Without Onion and Garlic)", 4: "Jain",
-        5: "Vegan",6: "Unknown"
-        }
+FOOD: dict[int: str] = {1: "Non-Vegetarian", 
+                        2: "Vegetarian (With Onion and Garlic)",
+                        3: "Vegetarian (Without Onion and Garlic)", 
+                        4: "Jain",
+                        5: "Vegan",
+                        6: "Unknown"
+                        }
 class Person:
     def __init__(self, name: str, DOB: str | dt.date, food_preference: str):
         '''DOB must be in YYYY-MM-DD format'''
@@ -29,7 +32,7 @@ class Person:
 
 
     def __str__(self) -> str:
-        return f"Hi, I am {self.name} and was born on {self.DOB}"
+        return f"Hi, I am {self.name} and was born on {self.DOB}\nMy food preference is {self.food_preference}"
 
     def get_name(self) -> str:
         return self.name
@@ -78,7 +81,7 @@ class Person:
         DOB should be in YYYY-MM-DD format
         '''
         if DOB not in (str, dt.datetime):
-            raise ValueError("Incorrect type passed to DOB")
+            raise TypeError("Incorrect type passed to DOB")
         elif type(DOB) == str:
             self.DOB: dt.datetime = dt.datetime.strptime(DOB.strip(), r"%Y-%m-%d")
         else:
@@ -89,7 +92,7 @@ class Person:
             self.food_preference: int = 6
             return
         for i, j in FOOD.items():
-            if food_preference.lower == j.lower():
+            if food_preference.lower() == j.lower():
                 self.food_preference: int = i
                 break
         else:

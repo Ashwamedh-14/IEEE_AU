@@ -70,7 +70,7 @@ def take_attendence(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
             presence = input(f"{emp_list[i].get_empID():<12}{emp_list[i].get_name():<40}{role:<22}")
         
             presence = presence.title().strip()
-            logger.info(f"{emp_list[i].get_empID} was marked {presence} for event {event}")
+            logger.info(f"{emp_list[i].get_empID()} was marked {presence} for event {event}")
             if presence not in ('A', 'P', 'Absent', 'Present', 'N/A', 'No'):        #To accept only valid inputs
                 raise ValueError("Attendence is only accepted in A/P format")
             presence = presence[0]

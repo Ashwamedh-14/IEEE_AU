@@ -7,7 +7,7 @@ from mysql.connector import connection, cursor, errors
 
 #self defined modules
 from Support_Files.printing import print_box
-from Support_Files.Person import Employee
+from Support_Files.Person import Employee, FOOD
 from src.attendence import put_emp_data, count_attendence
 
 #setting up the file_handle
@@ -25,9 +25,12 @@ logger.propagate = False
 #Main Functions start
 #Constants
 DIVISION = {'OBS': 'a', 'HEADS': 'b', 'MEMBER': 'c', "WIE": 'w'}
-TEAM = {1: ('01', 'RAS'), 2: ('02', 'Technical'), 
-        3: ('03', 'Logistics'), 4: ('04', 'Social Media'), 
-        5: ('05', 'CSE'), 6: ('06', 'Content'), 
+TEAM = {1: ('01', 'RAS'), 
+        2: ('02', 'Technical'), 
+        3: ('03', 'Logistics'), 
+        4: ('04', 'Social Media'), 
+        5: ('05', 'CSE'), 
+        6: ('06', 'Content'), 
         7: ('07', 'Graphics')}
 
 #This function checkes whether a particular members is present or not
@@ -45,6 +48,7 @@ def exists(curr: cursor.MySQLCursor, empid: str) -> bool:
         return True
     return False
 
+#Display members according to their team
 def display_members(curr: cursor.MySQLCursor, team: int | str | None, hierarchy: str | None) -> None:
     '''
     Pass a '*' in team if all members are required
@@ -174,6 +178,7 @@ def display_members(curr: cursor.MySQLCursor, team: int | str | None, hierarchy:
     print_box(data, length, 3)
     print('\n')
 
+#function to get details of a member
 def get_member_details(curr: cursor.MySQLCursor, emp_id: str) -> None:
     try:
         curr.execute('''select EMP_ID, CONCAT_WS(' ', FIRST_NAME, SURNAME),
@@ -219,6 +224,7 @@ def get_member_details(curr: cursor.MySQLCursor, emp_id: str) -> None:
         logger.error(f"The following error occurred:\n{e}", exc_info = True)
         print()
 
+#Function to add a new member to team
 def new_member(curr: cursor.MySQLCursor) -> None:
     while True:
         try:
@@ -292,15 +298,159 @@ def new_member(curr: cursor.MySQLCursor) -> None:
         print()
         break
 
-def update_member(curr: cursor.MySQLCursor, emp: Employee) -> None:
+#Function to update member details
+def update_member(con: connection.MySQLConnection ,curr: cursor.MySQLCursor, emp: Employee) -> None:
     if type(emp) != Employee:
         logger.error("Employee type was not passed")
+        print("The correct employee type was not passed. Kindly consider consulting with the developer")
         return
     print("The student details are: ")
     print(emp, end = '\n\n')
     
-    print("Enter the details you want to change")
+    print("Enter the details you want to change:-")
+    print("1. DOB")
+    print("2. Role")
+    print("3. DOJ")
+    print("4. Food Preference")
+    print("5. Go Back")
 
+    while True:
+        try:
+            chk = int(input("Enter your choice: "))
+            logger.info(f"Value input in check = {chk}")
+            if chk < 1 or chk > 5:
+                print("Kindly only enter your choice from 1 to 5\n")
+            else:
+                break
+        except ValueError as e:
+            logger.exception(f"The exception that occurred was\n{e}\n\n Value passed {chk:}", exc_info = True)
+            print("Kindly ensure you have given an integer only\n")
+    print("\n")
+
+    if chk == 1:
+        while True:
+            try:
+                dob = input("Enter new DOB in YYYY-MM-DD format: ")
+                logger.info(f"The following DOB was passed, {dob}")
+                emp.set_DOB(dob)
+                curr.execute("Update employees set emp_dob = %s where emp_id = %s", 
+                    (emp.get_DOB_str(True), emp.get_empID())
+                    )
+                con.commit()
+                break
+            except ValueError as e:
+                logger.exception(f"The error that occured was\n{e}\n\n DOB passed {dob}", exc_info = True)
+                print("Kindly enter the DOB in correct format\n")
+                con.rollback()
+            except errors.DataError as e:
+                logger.exception(f"The error that occured was\n{e}\n\n DOB passed {dob}", exc_info = True)
+                print("Kindly enter the DOB in correct format\n")
+                con.rollback()
+        
+    elif chk == 2:
+        curr.execute("select * from roles order by role_id")
+        roles: list[tuple[str,str]] = curr.fetchall()
+        roles, rows = roles, len(roles)
+        print("The positions are: ")
+        for i in range(rows):
+            if i == 0:
+                print("\nOBS")
+            elif i == 5:
+                print("\nHeads")
+            elif i == 12:
+                print("\nMembers")
+            elif i == 19:
+                print("\nWIE")
+            print(f"{i + 1}. {roles[i][0]}: {roles[i][1]}")
+        print()
+
+        while True:
+            try:
+                new_role = input("Kindly enter the new role ID for the person (case insensitive): ").strip().upper()
+                curr.execute("update employees set role_id = %s where emp_id = %s", (new_role, emp.get_empID()))
+                con.commit()
+                print("Role updated successfully")
+                break
+            except errors.IntegrityError as e:
+                con.rollback()
+                logger.exception(f"The following error occured\n{e}", exc_info = True)
+                print("Looks like you enterred a role_id that doesn't exist")
+                while True:
+                    a = input("Would you like to enter another? (Y/N): ").strip().upper()
+                    a = a[0]
+                    if a != 'Y' and a != 'N':
+                        print("Kindly enter a valid option")
+                    break
+                if a == 'N':
+                    break
+            
+    elif chk == 3:
+        while True:
+            try:
+                doj = input("Enter new DOJ in YYYY-MM-DD format: ")
+                logger.info(f"The following DOJ was passed, {doj}")
+                emp.set_DOJ(doj)
+                curr.execute("Update employees set DOJ = %s where emp_id = %s", (emp.get_DOB_str(True), emp.get_empID()))
+                con.commit()
+                break
+            except ValueError as e:
+                logger.exception(f"The error that occured was\n{e}\n\n DOJ passed {doj}", exc_info = True)
+                print("Kindly enter the DOJ in correct format\n")
+                con.rollback()
+            except errors.DataError as e:
+                logger.exception(f"The error that occured was\n{e}\n\n DOJ passed {doj}", exc_info = True)
+                print("Kindly enter the DOJ in correct format\n")
+                con.rollback()
+
+    elif chk == 4:
+        print("The food categories are:")
+        for i, j in FOOD.items():
+            print(f"{i}. {j}")
+
+        while True:
+            try:
+                preference = int(input("Enter the number corresponding to food preference: "))
+                if preference not in FOOD.keys():
+                    print("Kindly enter the correct option")
+                    while True:
+                        a = input("Would you like to enter another? (Y/N): ").strip().upper()
+                        a = a[0]
+                        if a != 'Y' and a != 'N':
+                            print("Kindly enter a valid option")
+                        break
+                    if a == 'Y':
+                        for i, j in FOOD.items():
+                            print(f"{i}. {j}")
+                emp.set_food_choice(FOOD.get(preference))
+                curr.execute("update employee set food_preference = %s where emp_id = %s",
+                             (emp.get_food_choice(), emp.get_empID()))
+                con.commit()
+                print("Food preference updated successfully")
+                break
+            except ValueError as e:
+                logger.exception(f"The error that occured was\n{e}\n\n preference passed {preference}", exc_info = True)
+                print("Kindly enter an integer only\n")
+                con.rollback()
+            except errors.DataError as e:
+                logger.exception(f"Food choice given was\n{e}", exc_info = True)
+                print("There was an error while inserting data into the database")
+                print("Kindly consider contacting your developer")
+                break
+        
+    elif chk == 5:
+        print("Exiting...")
+
+    else:
+        print("Invalid choice")
+
+    print()
+    con.rollback()
+    
+
+
+    #To be completed
+
+#main function of the file
 def members_main(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
     logger.debug("Inside Members Module")
     while True:
