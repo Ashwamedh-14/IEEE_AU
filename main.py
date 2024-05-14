@@ -9,6 +9,7 @@ from mysql.connector import connect
 
 #self defined modules
 import src.attendence as attendence
+import src.members as members
 
 #Setting up the logger
 LOG_FORMAT = logging.Formatter("%(asctime)s: %(levelname)s: %(filename)s\n%(message)s\n") #Specifying the format of output log
@@ -56,7 +57,8 @@ def main():
             logger.debug("Main Menu")       
             print("Kindly enter anyone of the actions below:")
             print('1. Take attendence')
-            print('2. Exit')
+            print("2. Members Related")
+            print('3. Exit')
 
             while True:
                 #To input only correct values
@@ -77,6 +79,12 @@ def main():
                 attendence.attend_main(con, curr)
                 print() #To maintain some space between one section and another
                 logger.debug("Out of the attendence Module")
+
+            elif ch == 2:
+                logger.debug("Going into the members module")
+                members.members_main(con, curr)
+                print() #To maintain some space between one section and another
+                logger.debug("Out of members file")
 
             else:
                 logger.debug("Closing Program")
