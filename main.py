@@ -63,9 +63,9 @@ def main():
             while True:
                 #To input only correct values
                 try:
-                    ch = int(input("Enter your choice (1, 2): "))
-                    if ch != 1 and ch != 2:
-                        print("Enter either 1 or 2 only")
+                    ch = int(input("Enter your choice (1, 2 or 3): "))
+                    if ch < 1 or ch > 3:
+                        print("Enter between 1 and 3 inclusive only")
                     else:
                         print()
                         break

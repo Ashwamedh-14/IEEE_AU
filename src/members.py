@@ -6,13 +6,13 @@ from logging import handlers
 from mysql.connector import connection, cursor, errors
 
 #self defined modules
-from Support_Files.printing import print_box
-from Support_Files.Person import Employee, FOOD
+from src.Support_Files.printing import print_box
+from src.Support_Files.Person import Employee, FOOD
 from src.attendence import put_emp_data, count_attendence
 
 #setting up the file_handle
 LOG_FORMAT = logging.Formatter("%(asctime)s: %(levelname)s: %(filename)s: %(funcName)s\n%(message)s\n")
-file_handle = handlers.TimedRotatingFileHandler(r'../logs/members.log', 'W6')
+file_handle = handlers.TimedRotatingFileHandler('./logs/members.log', 'W6')
 file_handle.setLevel(logging.DEBUG)
 file_handle.setFormatter(LOG_FORMAT)
 
@@ -63,16 +63,18 @@ def display_members(curr: cursor.MySQLCursor, team: int | str | None, hierarchy:
     logger.info("Team passed is %s with type %s and hierarchy passed is %s with type %s", team, type(team), hierarchy, type(hierarchy))
     if team != None and type(team) not in (str, int):
         raise TypeError("Incorrect type passed to team")
-    if type(team) == int and team < 1 or team > 7:
+    if type(team) == int and (team < 1 or team > 7):
         raise ValueError("Team can only take values None, '*' or integers from 1 to 7")
 
-    if type(hierarchy) != str:
+    if hierarchy != None and type(hierarchy) != str:
         raise TypeError("Incorrect type passed to hierarchy. Ensure its string type")
-    if hierarchy.upper() not in ('OBS', 'HEAD', 'MEMBERS', 'WIE'):
+    if hierarchy != None and hierarchy.upper() not in DIVISION.keys():
         raise ValueError("Incorrect Value passed to hierarchy. Should be OBS, Heads, Members or WIE only")
 
     if team == None:
         team = ''
+    if hierarchy == None:
+        hierarchy = ''
     #In case all members are required
     if team == '*':
         head = ('Student ID', 'Student Name', 'Department')
@@ -82,19 +84,25 @@ def display_members(curr: cursor.MySQLCursor, team: int | str | None, hierarchy:
         data: list[tuple[str,...]] = [head] + curr.fetchall()
 
         #selecting the maximum length of name in database
-        curr.execute(f"select max(length(concat_ws(' ',first_name,surname)) from employee")
+        curr.execute(f"select max(length(concat_ws(' ',first_name,surname))) from employees")
         max_name: int = curr.fetchone()[0]
+        if max_name == None:
+            max_name = 0
+        max_name = max(len('Member Name'), max_name)
         logger.info("Maximum length of name is: %s", max_name)
 
         #selecting maximum length of role_name in database
         curr.execute(f'''select max(length(role_name)) 
                      from role''')
         max_role: int = curr.fetchone()[0]
+        if max_role == None:
+            max_role = 0
+        max_role = max(len("Team"), max_role)
         logger.info("Maximum length of role name is: %s", max_role)
         length = (10, max_name, max_role)
 
     #In case only members are required
-    elif hierarchy.lower() == 'members':
+    elif hierarchy.lower() == 'member':
         head: tuple = ('Member ID', 'Member Name', 'Team')
         curr.execute(f'''select emp_id, concat_ws(' ',first_name,surname), role_name
                      from employees natural join role
@@ -103,14 +111,20 @@ def display_members(curr: cursor.MySQLCursor, team: int | str | None, hierarchy:
         data: list[tuple[str, ...]] = [head] + curr.fetchall()
         
         #selecting the maximum length of name in database
-        curr.execute(f'''select max(length(concat_ws(' ',first_name,surname)) from employees where lower(role_id) like "c{TEAM[team][0]}%"''')
+        curr.execute(f'''select max(length(concat_ws(' ',first_name,surname))) from employees where lower(role_id) like "c{TEAM[team][0]}%"''')
         max_name: int = curr.fetchone()[0]
-        logger.info(f"Maximum  length of name is {max_name}")
+        if max_name == None:
+            max_name = 0
+        max_name = max(len('Member Name'), max_name)
+        logger.info(f"Maximum  length of name column is {max_name}")
         
         #selecting maximum length of role_name in database
         curr.execute(f'''select max(length(role_name)) from role where lower(role_id) like 'c{TEAM[team][0]}' ''')
         max_role: int = curr.fetchone()[0]
-        logger.info(f"Maximum length of role_name is: {max_role}")
+        if max_role == None:
+            max_role = 0
+        max_role = max(len("Team"), max_role)
+        logger.info(f"Maximum length of role_name column is: {max_role}")
         length = (9, max_name, max_role)
 
     elif hierarchy.lower() == 'heads':
@@ -122,51 +136,75 @@ def display_members(curr: cursor.MySQLCursor, team: int | str | None, hierarchy:
         data: list[tuple[str, ...]] = [head] + curr.fetchall()
         
         #selecting the maximum length of name in database
-        curr.execute(f'''select max(length(concat_ws(' ',first_name,surname)) from employees where lower(role_id) like "b{TEAM[team][0]}%"''')
+        curr.execute(f'''select max(length(concat_ws(' ',first_name,surname))) from employees where lower(role_id) like "b{TEAM[team][0]}%"''')
         max_name: int = curr.fetchone()[0]
+        if max_name == None:
+            max_name = 0
+        max_name = max(len('Member Name'), max_name)
         logger.info(f"Maximum  length of name is {max_name}")
         
         #selecting maximum length of role_name in database
         curr.execute(f'''select max(length(role_name)) from role where lower(role_id) like 'b{TEAM[team][0]}' ''')
         max_role: int = curr.fetchone()[0]
+        if max_role == None:
+            max_role = 0
+        max_role = max(len("Team"), max_role)
         logger.info(f"Maximum length of role_name is: {max_role}")
         length = (9, max_name, max_role)
 
     elif hierarchy.lower() == 'wie':
         head: tuple = ('WIE ID', 'WIE Name', 'Chair')
-        curr.execute('''select emp_id, max(length(concat_ws(' ',first_name,surname)), role_name
+        curr.execute('''select emp_id, concat_ws(' ',first_name,surname), role_name
                      from employees natural join role
                      where lower(role_id) like 'w%'
                      order by role_id, emp_id''')
         data: list[tuple[str, ...]] = [head] + curr.fetchall()
         
         #selecting the maximum length of name in database
-        curr.execute(f'select max(length(concat_ws(' ',first_name,surname)) from employees where lower(role_id) like "w%"')
+        curr.execute(f'''
+                     select max(length(concat_ws(' ',first_name,surname))) 
+                     from employees where lower(role_id) like "w%"
+                     ''')
         max_name: int = curr.fetchone()[0]
+        if max_name == None:
+            max_name = 0
+        max_name = max(len('Member Name'), max_name)
         logger.info(f"Maximum  length of name is {max_name}")
         
         #selecting maximum length of role_name in database
         curr.execute(f'''select max(length(role_name)) from role where lower(role_id) like 'w%' ''')
         max_role: int = curr.fetchone()[0]
+        if max_role == None:
+            max_role = 0
+        max_role = max(len("Team"), max_role)
         logger.info(f"Maximum length of role_name is: {max_role}")
         length = (9, max_name, max_role)
         
     elif hierarchy.lower() == 'obs':
         head: tuple = ('OBS ID', 'OBS Name', 'Chair')
-        curr.execute('''select emp_id, max(length(concat_ws(' ',first_name,surname)), role_name
+        curr.execute('''select emp_id, concat_ws(' ',first_name,surname), role_name
                      from employees natural join role
                      where lower(role_id) like 'a%'
                      order by role_id, emp_id''')
         data: list[tuple[str, ...]] = [head] + curr.fetchall()
         
         #selecting the maximum length of name in database
-        curr.execute(f'select max(length(concat_ws(' ',first_name,surname)) from employees where lower(role_id) like "a%"')
+        curr.execute(f'''
+                     select max(length(concat_ws(' ',first_name,surname))) 
+                     from employees where lower(role_id) like "a%"
+                     ''')
         max_name: int = curr.fetchone()[0]
+        if max_name == None:
+            max_name = 0
+        max_name = max(len('Member Name'), max_name)
         logger.info(f"Maximum  length of name is {max_name}")
         
         #selecting maximum length of role_name in database
         curr.execute(f'''select max(length(role_name)) from role where lower(role_id) like 'a%' ''')
         max_role: int = curr.fetchone()[0]
+        if max_role == None:
+            max_role = 0
+        max_role = max(len("Team"), max_role)
         logger.info(f"Maximum length of role_name is: {max_role}")
         length = (9, max_name, max_role)
 
@@ -275,16 +313,44 @@ def new_member(curr: cursor.MySQLCursor) -> None:
                         if role < 1 or role > 7:
                             print("Enter a valid role\n")
                             continue
-                        role = DIVISION[hierarchy.upper()].upper() + TEAM[role]
+                        role = DIVISION[hierarchy.upper()].upper() + TEAM[role][0]
                         break
                     except ValueError as e:
-                        logger.error(f"Got error\n{e}\n because {role} was passed as role")
+                        try:
+                            logger.error(f"Got error\n{e}\n because {role} was passed as role")
+                        except UnboundLocalError as e:
+                            logger.error(f"No value was assigned to role")
                         print("Kindly enter an integer between 1 and 7 only")
             else:
                 role = input("Enter the role_id of the person: ").upper().strip()
             logger.info(f"Role given: {role}")
+
+            email = input("Kindly enter the email id: ")
+            logger.info(f"Email enterred: {email}")
+
+            for i, j in FOOD.items():
+                print(f"{i}. {j}")
+            while True:
+                try:
+                    food_preference = int(input("Kindly enter your choice (1-6): "))
+                    food_preference: str = FOOD.get(food_preference)
+                    logger.info(f"Food preference given is {food_preference}")
+                    break
+                except ValueError as e:
+                    print("Kindly enter only valid integers")
+                    logger.error(f"The following error occured:\n{e}", exc_info = True)
+                    print()
+                except KeyError as e:
+                    print("Kindly enter an integer in the specified range")
+                    logger.error(f"The following error occured:\n{e}", exc_info = True)
+                    print()
+
             
-            curr.execute("insert into employees values(%s, %s, %s, %s, %s, %s)", (emp_id, name, dob, role, doj, contact))
+            first_name, surname = name.split()[0], name.split()[1]
+
+            curr.execute("insert into employees values(%s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                         (emp_id, first_name, dob, role, doj, contact, email, surname, food_preference))
+            print("Data inserted successfully") 
         except errors.IntegrityError as e:
             logger.critical(f"The following error occured\n{e}", exc_info = True)
             print("Either the role you have enttered doesn't exists or the ID you enttered already exists")
@@ -500,7 +566,7 @@ def members_main(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
         elif ch == 2:
             empid: str = input("Enter the Student ID of the person: ").strip().upper()
             logger.info(f"{empid} was enttered as the student ID")
-            if exists(empid):
+            if exists(curr, empid):
                 get_member_details(curr, empid)
             else:
                 print("The Student Id does not exist")
@@ -525,19 +591,22 @@ def members_main(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
                         break
                 except ValueError:
                     print("Kindly enter a number only")
-                    logger.error(f"Instead of valid number, {op} was enttered")
+                    try:
+                        logger.error(f"Instead of valid number, {op} was enttered")
+                    except UnboundLocalError as e:
+                        logger.error(f"No value was passed to, so variable op was assigned")
                     print()
             print()
 
-            if ch == 1:
+            if op == 1:
                 display_members(curr, '*', None)
 
-            elif ch == 2:
+            elif op == 2:
                 display_members(curr, None, 'obs')
             
-            elif ch == 3:
+            elif op == 3:
                 print("These are the teams")
-                for i, j in DIVISION.values():
+                for i, j in TEAM.items():
                     print(f"{i}. {j[1]}")
                 while True:
                     try:
@@ -548,11 +617,11 @@ def members_main(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
                         break
                     except ValueError:
                         print("Kindly enter an integer only")
-                display_members(curr, TEAM[team][0], 'heads')
+                display_members(curr, team, 'heads')
 
-            elif ch == 4:
+            elif op == 4:
                 print("These are the teams")
-                for i, j in DIVISION.values():
+                for i, j in TEAM.items():
                     print(f"{i}. {j[1]}")
                 while True:
                     try:
@@ -563,12 +632,12 @@ def members_main(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
                         break
                     except ValueError:
                         print("Kindly enter an integer only")
-                display_members(curr, TEAM[team][0], 'members')
+                display_members(curr, team, 'member')
 
-            elif ch == 5:
+            elif op == 5:
                 display_members(curr, None, 'WIE')
 
-            elif ch == 6:
+            elif op == 6:
                 pass
 
             else:

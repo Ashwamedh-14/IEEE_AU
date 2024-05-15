@@ -15,6 +15,7 @@ class Person:
 
         self.name: str = (name.strip()).title()
         if type(DOB) == str:
+            print(DOB)
             self.DOB: dt.datetime = dt.datetime.strptime(DOB.strip(), r"%Y-%m-%d")
         else:
             self.DOB: dt.datetime = DOB

@@ -23,13 +23,15 @@ logger.setLevel(logging.DEBUG)
 logger.propagate = False
 
 #This function exists to turn table rows into manageable employee class
-def put_emp_data(data_list: list[tuple[str | int | datetime]]) -> list[Employee]:
+def put_emp_data(data_list: list[tuple[str | int | datetime]]) -> Employee | list[Employee]:
     l = []
     for i in data_list:
         logger.info(f"Data in:\n{i}")
         emp = Employee(i[1], i[2], i[0], i[4], i[3],i[5], i[6], i[7])
         logger.info(f"Data out:\n{str(emp)}")
         l.append(emp)
+    if len(l) == 1:
+        return l[0]
     return l
 
 #The Function that takes attendence of the members
@@ -145,13 +147,15 @@ def count_attendence(curr: cursor.MySQLCursor, employee: Employee) -> float:
 #This function lists attendence of a particular person
 def list_attendence(curr:cursor.MySQLCursor, emp_id: str):
     try:
-        curr.execute('select * from employees where emp_id = %s', (emp_id,))
-        data = curr.fetchone()
+        curr.execute('''SELECT EMP_ID, CONCAT_WS(' ',First_NAME,SURNAME),
+                    EMP_DOB, ROLE_ID, DOJ, CONTACT_INFO, EMAIL_ID, FOOD_PREFERENCE
+                    FROM EMPLOYEES WHERE EMP_ID = %s''', (emp_id,))
+        data = curr.fetchall()
         logger.info(f"Data obtained from database for {emp_id}:\n{data}")
         if data == None:
             print(f"No attendence taken for {emp_id}")
             return
-        emp = Employee(data[1], data[2], data[0], data[4], data[3])
+        emp: Employee = put_emp_data(data)
         curr.execute('''select A.Date, A.Presence, E.event_name from Attendence A natural join Events E where emp_id = %s order by emp_id'''
                      , (emp.get_empID(),))
         d = curr.fetchall()
