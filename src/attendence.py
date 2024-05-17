@@ -46,12 +46,18 @@ def take_attendence(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
     logger.info(f"Date that was fetched: {date}")
 
     while True:
-        event: str = input("Enter the Event ID: ")
-        logger.info(f"Event Id that was input {event}")
-        if event.isnumeric():       #To make sure only numbers are not enterred
+        event: str = input("Enter the Event ID, or press enter to exit: ")
+        try:
+            logger.info(f"Event Id that was input {event}")
+        except UnboundLocalError as e:
+            logger.debug("Pressed enter to exit")
+
+        if event == None:
+            return
+        elif event.isnumeric():       #To make sure only numbers are not enterred
             print("There is no distinction. Please provide")
             continue
-        curr.execute('select event_id from events where event_id = %s', (event,))      #To see whether such an id exists or not
+        curr.execute('Select event_id from events where event_id = %s', (event,))      #To see whether such an id exists or not
         res = curr.fetchone()
         logger.info(f"Result from checking for the same Event ID in Database: {res}")
         if res == None:             #ID not found
@@ -59,10 +65,11 @@ def take_attendence(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
             continue
         break
     print()
+
     print("Type P for Present, A for Absent or N/A, No for not required")
     print(f"Today's date: {date:%d %B %Y}")
-
     print(f"{'Student ID':<12}{"Student Name":<40}{"Student Role":<22}{"Presence":<10}")
+    
     i = 0
     while i != len(emp_list):    #So that if there is error in input, we can continue from the same person
         try:
