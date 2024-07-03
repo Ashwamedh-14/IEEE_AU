@@ -1,5 +1,5 @@
 #built in modules
-from pickle import load
+from pickle import load, dump
 from time import sleep
 import logging
 from logging import handlers
@@ -34,6 +34,7 @@ def main():
 
         #inputing database details from binary file
         try:
+            flag = True
             logger.debug("Opening the file")
             with open("cred.dat", 'rb') as myfile:
                 logger.debug(f"File opened {myfile.name}")
@@ -45,9 +46,33 @@ def main():
                               password = data['password'],
                               database = data['database'])
                 logger.debug("Connection established")
+
+        except FileNotFoundError as e:
+            flag = False
+            logger.error(f"The cred file was not there. Creating a new one...")
+            d = {}
+            print("Looks like you don't have a credential file")
+            sleep(1)
+            print("We'll set one up for you")
+            sleep(1)
+            print("Kindly enter all the details")
+            d["host"] = input("Enter the host of the database: ")
+            d["user"] = input("Enter the user of the database: ")
+            d["password"] = input("Enter the password of the database: ")
+            d["database"] = input("Enter the name of the database to be used: ")
+
+            #creating file
+            with open("cred.dat", "wb") as myfile:
+                dump(d, myfile)
+            print("Credentials saved successfully")
+            print("If you want to resave the credentials. Simply delete the credential file, i.e., cred.dat")
+            print("Please restart the program")
+            return
+
         except Exception as e:
+            flag = False
             logger.critical(f"Was not able to connect to database\n{e}", exc_info = True)
-            print("The following error occured:", repr(e)) #To indicate what could have potentially caused the crash
+            print(f"The following error occured:\n{repr(e)}") #To indicate what could have potentially caused the crash
             return
         curr = con.cursor()
         print("Connection established: ")
@@ -97,6 +122,8 @@ def main():
         print()
 
     finally:
+        if not flag:
+            return
         curr.close()  #Operations here for esuring closing of cursor and database
         con.close()
         print("Closing Database")
