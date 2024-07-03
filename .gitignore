@@ -1,6 +1,5 @@
 __pycache__
 .cpy
-.vscode
-test.pyw
-test.py
+cred.dat
+test
 logs/

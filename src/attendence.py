@@ -163,15 +163,21 @@ def list_attendence(curr:cursor.MySQLCursor, emp_id: str):
             print(f"No attendence taken for {emp_id}")
             return
         emp: Employee = put_emp_data(data)
-        curr.execute('''select A.Date, A.Presence, E.event_name from Attendence A natural join Events E where emp_id = %s order by emp_id'''
+        curr.execute('''select A.Date, A.Presence, E.event_name, A.Reason from Attendence A natural join Events E where emp_id = %s order by emp_id'''
                      , (emp.get_empID(),))
         d = curr.fetchall()
         logger.info(f"Attendence data obtained:\n{d}")
         if d != []:
-            data = [("Date", "Attendence", "Event")]
+            data = [("Date", "Attendence", "Event", "Reason for not Attending")]
             data.extend(d)
+            r_length = 0
             for i in range(1, len(data)):
-                data[i] = data[i][0].strftime(r'%d-%m-%Y'), data[i][1], data[i][2]
+                if data[i][3] == None:
+                    data[i] = data[i][0].strftime(r'%d-%m-%Y'), data[i][1], data[i][2], "Not Applicable"
+                    r_length = max(r_length, 14)
+                else:
+                    r_length = max(r_length, len(data[i][3]))
+                    data[i] = data[i][0].strftime(r'%d-%m-%Y'), data[i][1], data[i][2], data[i][3]
         print(f"Name           : {emp.get_name()}")
         print(f"ID             : {emp.get_empID()}")
         print(f"Date of Joining: ", end = '')
@@ -181,17 +187,21 @@ def list_attendence(curr:cursor.MySQLCursor, emp_id: str):
         except ValueError:
             print("Not Passed")
         
-        curr.execute('select max(length(E.event_name)) from attendence A natural join events E where A.emp_id = %s',
+        curr.execute('select max(length(E.event_name)), max(length(A.Reason)) from attendence A natural join events E where A.emp_id = %s',
                      (emp.get_empID(),))
-        length:int = curr.fetchone()[0]
-        logger.info(f"Length of longest Event Name {emp.get_name()} was in = {length}")
+        length1, length2 = curr.fetchone()
+        if length2 == None:
+            length2 = 0
+        logger.info(f"Length of longest Event Name {emp.get_name()} was in = {length1}")
         
         if d == []:
             print("Meeting not yet conducted")
         else:
+            length1 = max(length1, 5)
+            length2 = max(length2, 24, r_length)
             perc = count_attendence(curr, emp)
             print(f"Attendence %   : {perc}")
-            print_box(data, (10, 10, length), 3)
+            print_box(data, (10, 10, length1, length2), 4)
     except ValueError as e:
         print("The following exception occured:", repr(e), sep = '\n')
         logger.error(f"The following error occurred:\n{e}", exc_info = True)
