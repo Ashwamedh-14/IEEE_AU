@@ -22,6 +22,18 @@ logger.setLevel(logging.DEBUG)                                                  
 logger.propagate = False
 
 
+def new_credential(cred_file) -> None:
+    '''
+    cred_file should be the buffered reader for cred.dat file which is opened in binary format with filemode 'wb'
+    '''
+    print("Kindly enter all the details")
+    d["host"] = input("Enter the host of the database: ")
+    d["user"] = input("Enter the user of the database: ")
+    d["password"] = input("Enter the password of the database: ")
+    d["database"] = input("Enter the name of the database to be used: ")
+
+
+
 
 
 def main():
@@ -55,11 +67,6 @@ def main():
             sleep(1)
             print("We'll set one up for you")
             sleep(1)
-            print("Kindly enter all the details")
-            d["host"] = input("Enter the host of the database: ")
-            d["user"] = input("Enter the user of the database: ")
-            d["password"] = input("Enter the password of the database: ")
-            d["database"] = input("Enter the name of the database to be used: ")
 
             #creating file
             with open("cred.dat", "wb") as myfile:
