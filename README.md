@@ -4,7 +4,7 @@ A repository to develop code for basic tasks in IEEE student chapter of Ahmedaba
 
 ## Requirements
 
-- Python 3.12+ should be installed
+- Python 3.12+ should be installed and on system path
 - MySQL 8 should be installed
 
 ## Setup
@@ -30,9 +30,9 @@ To set up the virtual environment kindly follow these steps
   This will create a virtual environment in your project folder.
 
 - After .venv folder is created, run the following command
-  > - On windows  
+  - On windows  
     `.venv/Scripts/activate`  
-  > - On MacOS / Linux  
+  - On MacOS / Linux  
     `source .venv/Scripts/activate`
 
 - This will activate the virtual environment and allow the project to use the packages installed within this environment. It   will look something like this  
