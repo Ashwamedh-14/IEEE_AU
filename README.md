@@ -11,7 +11,7 @@ To set up the virtual environment kindly follow these steps
 
 - Open the directory where the main.py file is stored.
 
-- Run the following command  
+- Run the following command on the command line  
   `python -m venv .venv`  
   This will create a virtual environment in your project folder.
 
@@ -21,7 +21,8 @@ To set up the virtual environment kindly follow these steps
   > - On MacOS / Linux  
     `source .venv/Scripts/activate`
 
-- This will activate the virtual environment and allow the project to use the packages installed within this environment.
+- This will activate the virtual environment and allow the project to use the packages installed within this environment. It   will look something like this  
+  `(.venv) [directory in which the project is .venv is located]`
 
 - Upon activating the virtual environment, to install all dependencies, run the following command  
   `pip install -r requirements.txt`  
