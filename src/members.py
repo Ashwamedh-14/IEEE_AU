@@ -6,9 +6,9 @@ from logging import handlers
 from mysql.connector import connection, cursor, errors
 
 #self defined modules
-from printing import print_box
-from Person import Employee, FOOD
-from attendence import put_emp_data, count_attendence
+from src.printing import print_box
+from src.Person import Employee, FOOD
+from src.attendence import put_emp_data, count_attendence
 
 #setting up the file_handle
 LOG_FORMAT = logging.Formatter("%(asctime)s: %(levelname)s: %(filename)s: %(funcName)s\n%(message)s\n")

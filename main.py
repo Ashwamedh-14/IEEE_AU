@@ -82,6 +82,7 @@ def main():
         
         #In case the credentials are invalid
         except errors.DatabaseError as e:
+            flag = False
             print("It looks like the credentials stored are invalid.")
             ch = input("Would you like to save again? (Y / N): ")
             if ch == None:
