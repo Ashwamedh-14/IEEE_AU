@@ -7,9 +7,9 @@ from logging import handlers
 from mysql.connector import connection, cursor, errors
 
 #Self made libraries
-from src.Support_Files.Person import Employee
-from src.Support_Files import cleaning as clean
-from src.Support_Files.printing import print_box
+from Person import Employee
+from printing import print_box
+import cleaning as clean
 
 #Setting Up the Logger
 LOG_FORMAT = logging.Formatter("%(asctime)s: %(levelname)s: %(filename)s: %(funcName)s\n%(message)s\n")
