@@ -44,7 +44,7 @@ To set up the virtual environment kindly follow these steps
 
 - You can now use the environment as you please. Once you are done tinkering with the environment, to close it simply run `deactivate` on the terminal and the virtual environment will be deactivated.
 
-## Adding new library
+## Adding a New Library
 
 It can be that during development, a new 3rd party library might be needed. This section details the steps to add this library.
 
