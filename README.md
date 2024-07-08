@@ -43,3 +43,24 @@ To set up the virtual environment kindly follow these steps
   This will install all the required dependencies mentioned in the requirements.txt file into the lib folder of the virtual environment
 
 - You can now use the environment as you please. Once you are done tinkering with the environment, to close it simply run `deactivate` on the terminal and the virtual environment will be deactivated.
+
+## Adding new library
+
+It can be that during development, a new 3rd party library might be needed. This section details the steps to add this library.
+
+- Open the directory in which the virtual environment is located. Activate the virtual environment by running the command
+  - On windows  
+    `.venv/Scripts/activate`  
+  - On MacOS / Linux  
+    `source .venv/Scripts/activate`
+
+- This will activate the virtual environment and allow the project to use the packages installed within this environment. It   will look something like this  
+  `(.venv) directory/in/which/.venv/is/located`
+
+- Then install the third party library using pip  
+  `pip install package(s)`
+
+- After the packages are installed, run the following command  
+  `pip freeze > requirements.txt`
+
+- This will update the requirements.txt file with any new package that might have been installed in the virtual environment and allow other people to install the same dependency when trying to tinker with the code in future.
