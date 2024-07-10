@@ -1,0 +1,36 @@
+name : Branch Protection
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+
+jobs:
+    branch-protection:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: checkout code
+              uses: actions/checkout@v2
+
+            - name: Set Branch Protection
+              run : |
+                BRANCH_NAME = "main"
+                GITHUB_TOKEN = "${{secrets.GITHUB_TOKEN}}"
+
+
+                #Enable required pull request reviews
+                gh api "repos/$GITHUB_REPOSITORY/branches/$BRANCH_NAME/protection/required_pull_request_reviews" \
+                -X PUT \
+                -F "dismissal_restrictions.users[]=IEEE-Ahmedabad-University-SB-Official" \
+                -F "dismiss_stale_reviews=true" \
+                -F "require_code_owner_reviews=true" \
+                -F "required_approving_review_count=1" \
+                -H "Authorization: Bearer $GITHUB_TOKEN"
+
+
+                # Disallow direct commits
+                gh api "repos/$GITHUB_REPOSITORY/branches/$BRANCH_NAME/protection/required_linear_history" \
+                -X POST \
+                -H "Authorization: Bearer $GITHUB_TOKEN"
