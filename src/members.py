@@ -77,6 +77,7 @@ def display_members(curr: cursor.MySQLCursor, team: int | str | None, hierarchy:
         team = ''
     if hierarchy == None:
         hierarchy = ''
+    
     #In case all members are required
     if team == '*':
         head = ('Student ID', 'Student Name', 'Department')
@@ -527,19 +528,7 @@ def members_main(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
         print("3. Print Member Details")
         print("4. Display Members")
         print("5. Go back")
-        while True:
-            try:
-                ch = int(input("Enter your choice (1-5): "))
-                logger.info(f"{ch} was input as choice")
-                if ch < 1 or ch > 5:
-                    print("Valid Choices are from 1 to 5 only")
-                    print()
-                else:
-                    break
-            except ValueError:
-                print("Kindly enter a number only")
-                logger.error(f"Instead of valid number, {ch} was enttered")
-                print()
+        ch = clean.get_Int(5,1,"Enter your choice (1 - 5): ")
         print()
 
         #To enter new members
@@ -590,7 +579,7 @@ def members_main(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
             print("5. Only WIE")
             print("6. Go Back")
             
-            op = clean.get_Int(1, 6,"Enter your choice (1 - 6): ")
+            op = clean.get_Int(6, 1,"Enter your choice (1 - 6): ")
 
             if op == 1:
                 display_members(curr, '*', None)
@@ -602,14 +591,14 @@ def members_main(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
                 print("These are the teams")
                 for i, j in TEAM.items():
                     print(f"{i}. {j[1]}")
-                team = clean.get_Int(1, 7, "Enter the Team Number: ")
+                team = clean.get_Int(7, 1, "Enter the Team Number: ")
                 display_members(curr, team, 'heads')
 
             elif op == 4:
                 print("These are the teams")
                 for i, j in TEAM.items():
                     print(f"{i}. {j[1]}")
-                team = clean.get_Int(1, 7, "Enter the Team Number: ")
+                team = clean.get_Int(7, 1, "Enter the Team Number: ")
                 display_members(curr, team, 'member')
 
             elif op == 5:
