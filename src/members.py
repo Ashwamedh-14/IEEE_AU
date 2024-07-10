@@ -10,6 +10,8 @@ from src.printing import print_box
 from src.Person import Employee, FOOD
 from src.attendence import put_emp_data, count_attendence
 
+import src.cleaning as clean
+
 #setting up the file_handle
 LOG_FORMAT = logging.Formatter("%(asctime)s: %(levelname)s: %(filename)s: %(funcName)s\n%(message)s\n")
 file_handle = handlers.TimedRotatingFileHandler('./logs/members.log', 'W6')
@@ -22,7 +24,6 @@ logger.addHandler(file_handle)
 logger.setLevel(logging.DEBUG)
 logger.propagate = False
 
-#Main Functions start
 #Constants
 DIVISION = {'OBS': 'a', 'HEADS': 'b', 'MEMBER': 'c', "WIE": 'w'}
 TEAM = {1: ('01', 'RAS'), 
@@ -33,7 +34,8 @@ TEAM = {1: ('01', 'RAS'),
         6: ('06', 'Content'), 
         7: ('07', 'Graphics')}
 
-#This function checkes whether a particular members is present or not
+#Main Functions start
+#This function checkes whether a particular member is present or not
 def exists(curr: cursor.MySQLCursor, empid: str) -> bool:
     logger.info("Empid that was passed is: %s", empid)
     if type(empid) != str:
@@ -227,7 +229,7 @@ def get_member_details(curr: cursor.MySQLCursor, emp_id: str) -> None:
         if data == None:
             print(f"No attendence taken for {emp_id}")
             return
-        emp = Employee(data[1], data[2], data[0], data[4], data[3],data[5],data[6],data[7])
+        emp: Employee = put_emp_data([data])
         print(f"Name           : {emp.get_name()}")
         print(f"ID             : {emp.get_empID()}")
         print(f"Date of Birth  : ", end = '')
@@ -348,8 +350,11 @@ def new_member(curr: cursor.MySQLCursor) -> None:
             
             first_name, surname = name.split()[0], name.split()[1]
 
-            curr.execute("insert into employees values(%s, %s, %s, %s, %s, %s, %s, %s, %s)",
+            curr.execute('''insert into employees(EMP_ID, First_Name, EMP_DOB, ROLE_ID, DOJ,
+                         CONTACT_INFO, EMAIL_ID, SURNAME, FOOD_PREFERENCE)
+                         values(%s, %s, %s, %s, %s, %s, %s, %s, %s)''',
                          (emp_id, first_name, dob, role, doj, contact, email, surname, food_preference))
+
             print("Data inserted successfully") 
         except errors.IntegrityError as e:
             logger.critical(f"The following error occured\n{e}", exc_info = True)
@@ -511,10 +516,6 @@ def update_member(con: connection.MySQLConnection ,curr: cursor.MySQLCursor, emp
 
     print()
     con.rollback()
-    
-
-
-    #To be completed
 
 #main function of the file
 def members_main(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
@@ -522,12 +523,13 @@ def members_main(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
     while True:
         print("Select one of the following")
         print("1. Enter New Members")
-        print("2. Print Member Details")
-        print("3. Display Members")
-        print("4. Go back")
+        print("2. Update Members")
+        print("3. Print Member Details")
+        print("4. Display Members")
+        print("5. Go back")
         while True:
             try:
-                ch = int(input("Enter your choice (1-4): "))
+                ch = int(input("Enter your choice (1-5): "))
                 logger.info(f"{ch} was input as choice")
                 if ch < 1 or ch > 5:
                     print("Valid Choices are from 1 to 5 only")
@@ -540,18 +542,9 @@ def members_main(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
                 print()
         print()
 
+        #To enter new members
         if ch == 1:
-            while True:
-                try:
-                    n = int(input("Enter the total number of new members you want to add: "))
-                    logger.info(f"{n} was input to integer")
-                    if n < 0:
-                        print("Kindly enter a positive integer\n")
-                        continue
-                    break
-                except ValueError as e:
-                    print("Please ensure to pass only valid integer\n")
-                    logger.error(f"The following error occured\n{e}", exc_info = True)
+            n = clean.get_natural_num("Enter the number of new members you want to add: ")
 
             try:
                 for i in range(n):
@@ -563,7 +556,22 @@ def members_main(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
                 con.rollback()
             print()
 
+        #To update current members
         elif ch == 2:
+            empid = input("Enter the Student ID of the person").upper()
+            if exists(curr, empid):
+                data = curr.execute('''
+                                    select EMP_ID, CONCAT_WS(' ', FIRST_NAME, SURNAME), EMP_DOB, ROLE_ID, DOJ,
+                                    CONTACT_INFO, EMAIL_ID, FOOD_PREFERENCE FROM EMPLOYEES WHERE EMP_ID = %s
+                                    ''',
+                                    (empid,))
+                emp: Employee = put_emp_data([data])
+                update_member(emp)
+            else:
+                print("Employee does not exists. Kindly check whether you have enterred correct employee data")
+
+        #To print member details
+        elif ch == 3:
             empid: str = input("Enter the Student ID of the person: ").strip().upper()
             logger.info(f"{empid} was enttered as the student ID")
             if exists(curr, empid):
@@ -572,7 +580,8 @@ def members_main(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
                 print("The Student Id does not exist")
             print()
 
-        elif ch == 3:
+        #To display members
+        elif ch == 4:
             print("Please select one of the following:")
             print("1. All the members")
             print("2. Only the OBS")
@@ -580,23 +589,8 @@ def members_main(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
             print("4. Only the Members")
             print("5. Only WIE")
             print("6. Go Back")
-            while True:
-                try:
-                    op = int(input("Enter your choice (1-4): "))
-                    logger.info(f"{op} was input as choice")
-                    if op < 1 or op > 6:
-                        print("Valid Choices are from 1 to 6 only")
-                        print()
-                    else:
-                        break
-                except ValueError:
-                    print("Kindly enter a number only")
-                    try:
-                        logger.error(f"Instead of valid number, {op} was enttered")
-                    except UnboundLocalError as e:
-                        logger.error(f"No value was passed to, so variable op was assigned")
-                    print()
-            print()
+            
+            op = clean.get_Int(1, 6,"Enter your choice (1 - 6): ")
 
             if op == 1:
                 display_members(curr, '*', None)
@@ -608,30 +602,14 @@ def members_main(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
                 print("These are the teams")
                 for i, j in TEAM.items():
                     print(f"{i}. {j[1]}")
-                while True:
-                    try:
-                        team = int(input("Enter the team you want to select: "))
-                        if team < 1 or team > 7:
-                            print("Please enter a number between 1 and 7")
-                            continue
-                        break
-                    except ValueError:
-                        print("Kindly enter an integer only")
+                team = clean.get_Int(1, 7, "Enter the Team Number: ")
                 display_members(curr, team, 'heads')
 
             elif op == 4:
                 print("These are the teams")
                 for i, j in TEAM.items():
                     print(f"{i}. {j[1]}")
-                while True:
-                    try:
-                        team = int(input("Enter the team you want to select: "))
-                        if team < 1 or team > 7:
-                            print("Please enter a number between 1 and 7")
-                            continue
-                        break
-                    except ValueError:
-                        print("Kindly enter an integer only")
+                team = clean.get_Int(1, 7, "Enter the Team Number: ")
                 display_members(curr, team, 'member')
 
             elif op == 5:
@@ -643,7 +621,7 @@ def members_main(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
             else:
                 print("Wrong input")
 
-        elif ch == 4:
+        elif ch == 5:
             logger.debug("Leaving members.main")
             return
         
