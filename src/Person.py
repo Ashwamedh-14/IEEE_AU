@@ -77,11 +77,11 @@ class Person:
             raise TypeError("Incorrect type passed to name")
         self.name = (name.strip()).title()
 
-    def set_DOB(self, DOB: str | dt.datetime) -> dt.NoReturn:
+    def set_DOB(self, DOB: str | dt.datetime) -> None:
         '''
         DOB should be in YYYY-MM-DD format
         '''
-        if DOB not in (str, dt.datetime):
+        if type(DOB) not in (str, dt.datetime):
             raise TypeError("Incorrect type passed to DOB")
         elif type(DOB) == str:
             self.DOB: dt.datetime = dt.datetime.strptime(DOB.strip(), r"%Y-%m-%d")
@@ -186,7 +186,8 @@ class Employee(Person):
         
 
     def __str__(self) -> str:
-        return f'''Name: {self.name}\nDOB: {self.DOB}\nEmployee ID: {self.emp_ID}\nDate of Joining: {self.DOJ}\nRole: {self.role}\nEmail: {self.email}\nFood Preference: {self.food_preference}'''
+        return f'''
+        Name: {self.name}\nDOB: {self.DOB}\nEmployee ID: {self.emp_ID}\nDate of Joining: {self.DOJ}\nRole: {self.role}\nEmail: {self.email}\nFood Preference: {FOOD.get(self.food_preference)}'''
 
     def get_empID(self) -> str:
         return self.emp_ID
