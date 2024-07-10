@@ -16,8 +16,8 @@ jobs:
 
             - name: Set Branch Protection
               run : |
-                BRANCH_NAME = "main"
-                GITHUB_TOKEN = "${{secrets.GITHUB_TOKEN}}"
+                BRANCH_NAME="main"
+                GITHUB_TOKEN="${{secrets.GITHUB_TOKEN}}"
 
 
                 #Enable required pull request reviews
