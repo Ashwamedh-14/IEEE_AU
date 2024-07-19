@@ -497,7 +497,7 @@ def update_member(con: connection.MySQLConnection ,curr: cursor.MySQLCursor, emp
     con.rollback()
 
 #main function of the file
-def members_main(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
+def members_main(con: connection.MySQLConnection, curr: cursor.MySQLCursor) -> None:
     logger.debug("Inside Members Module")
     while True:
         print("Select one of the following")
@@ -585,13 +585,17 @@ def members_main(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
                 team = clean.get_Int(7, 1, "Enter the Team Number: ")
                 display_members(curr, team, 'member')
 
-            elif op == 6:
+            elif op == 5:
                 display_members(curr, None, 'WIE')
 
-            else:
-                print("Wrong input")
+            elif op == 6:
+                print()
+                pass
 
-        elif ch == 5:
+            else:
+                print("Wrong input", end = '\n\n')
+
+        elif ch == 6:
             logger.debug("Leaving members.main")
             return
         
