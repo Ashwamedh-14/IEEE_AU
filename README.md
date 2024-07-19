@@ -1,6 +1,13 @@
 # IEEE_AU
 
-A repository to develop code for basic tasks in IEEE student chapter of Ahmedabad University
+## About
+
+A repository to develop code for basic tasks in IEEE student chapter of Ahmedabad University. This is a personal side project and in no way is it intended to be actually used in official working environment. Atleast in its current state.
+
+## Features
+
+- Completely CLI (command line interface) based
+- Can be modified to suit your personal use case
 
 ## Requirements
 
@@ -8,6 +15,8 @@ A repository to develop code for basic tasks in IEEE student chapter of Ahmedaba
 - MySQL 8 should be installed
 
 ## Setup
+
+- Fork the repository.
 
 - Clone the repository into your local machine
 
@@ -43,6 +52,13 @@ To set up the virtual environment kindly follow these steps
   This will install all the required dependencies mentioned in the requirements.txt file into the lib folder of the virtual environment
 
 - You can now use the environment as you please. Once you are done tinkering with the environment, to close it simply run `deactivate` on the terminal and the virtual environment will be deactivated.
+
+## Contributing
+
+People are welcome to contribute to the project itself. Kindly keep the following points in mind.
+
+- For any major changes, kindly submit an issue first.
+- Code that you write should be well documented.
 
 ## Adding a New Library
 
