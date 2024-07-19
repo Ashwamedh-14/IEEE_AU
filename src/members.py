@@ -10,6 +10,8 @@ from src.printing import print_box
 from src.Person import Employee, FOOD
 from src.attendence import put_emp_data, count_attendence
 
+import src.cleaning as clean
+
 #setting up the file_handle
 LOG_FORMAT = logging.Formatter("%(asctime)s: %(levelname)s: %(filename)s: %(funcName)s\n%(message)s\n")
 file_handle = handlers.TimedRotatingFileHandler('./logs/members.log', 'W6')
@@ -22,7 +24,6 @@ logger.addHandler(file_handle)
 logger.setLevel(logging.DEBUG)
 logger.propagate = False
 
-#Main Functions start
 #Constants
 DIVISION = {'OBS': 'a', 'HEADS': 'b', 'MEMBER': 'c', "WIE": 'w'}
 TEAM = {1: ('01', 'RAS'), 
@@ -33,7 +34,8 @@ TEAM = {1: ('01', 'RAS'),
         6: ('06', 'Content'), 
         7: ('07', 'Graphics')}
 
-#This function checkes whether a particular members is present or not
+#Main Functions start
+#This function checkes whether a particular member is present or not
 def exists(curr: cursor.MySQLCursor, empid: str) -> bool:
     logger.info("Empid that was passed is: %s", empid)
     if type(empid) != str:
@@ -75,6 +77,7 @@ def display_members(curr: cursor.MySQLCursor, team: int | str | None, hierarchy:
         team = ''
     if hierarchy == None:
         hierarchy = ''
+    
     #In case all members are required
     if team == '*':
         head = ('Student ID', 'Student Name', 'Department')
@@ -225,9 +228,9 @@ def get_member_details(curr: cursor.MySQLCursor, emp_id: str) -> None:
         data = curr.fetchone()
         logger.info(f"Data obtained from database for {emp_id}:\n{data}")
         if data == None:
-            print(f"No attendence taken for {emp_id}")
+            print(f"No record for {emp_id}")
             return
-        emp = Employee(data[1], data[2], data[0], data[4], data[3],data[5],data[6],data[7])
+        emp: Employee = put_emp_data([data])
         print(f"Name           : {emp.get_name()}")
         print(f"ID             : {emp.get_empID()}")
         print(f"Date of Birth  : ", end = '')
@@ -262,6 +265,14 @@ def get_member_details(curr: cursor.MySQLCursor, emp_id: str) -> None:
         logger.error(f"The following error occurred:\n{e}", exc_info = True)
         print()
 
+#Function to get details of all members
+def get_member_details_all(curr: cursor.MySQLCursor) -> None:
+    curr.execute('select emp_id from employees order by role_id') 
+    ids = curr.fetchall()
+    for i in ids:
+        get_member_details(curr, i[0])
+        print()
+
 #Function to add a new member to team
 def new_member(curr: cursor.MySQLCursor) -> None:
     while True:
@@ -275,81 +286,70 @@ def new_member(curr: cursor.MySQLCursor) -> None:
             elif exists(curr, emp_id):
                 print("Employee ID already exists\n")
                 continue
-
+            
+            #inputs name
             name = input("Enter the name of the person: ").strip().title()
             logger.info(f"Name give: {name}")
 
+            #inputs date of birth
             dob = input("Enter the person's DOB in format YYYY-MM-DD: ").strip()
             if dob == '':
                 dob = None
             logger.info(f"DOB given: {dob}")
 
+            #inputs date of joinning
             doj = input("Enter the person's DOJ in format YYYY-MM-DD: ").strip()
             if doj == '':
                 doj = None
             logger.info(f"DOJ given: {doj}")
 
+            #inputs mobile number
             contact = input("Enter the person's mobile number: ").strip()
             logger.info(f"Contact given: {contact}")
 
-            if not contact.isnumeric() or len(str(int(contact))) != 10:
+            #checks whether its a valid mobile number
+            if not contact.isnumeric() or len(contact) != 10:
                 print("Please enter a valid contact number\n")
                 continue
 
+            #To input if the Person is a Head, Member, OBs, or part of WIE
             hierarchy = input("Enter the position of the new person: ").strip()
             logger.info(f"Hierarchy enttered: {hierarchy}")
 
+            #If match not found then loops
             if hierarchy.upper() not in DIVISION.keys():
                 print("Invalid hierarchy\nEnter one of the following only")
                 print(*DIVISION.keys(),end = '\n\n')
                 continue
             
             if hierarchy.upper() != 'OBS' and hierarchy.upper() != 'WIE':
-                for i, j in TEAM.items():
+                for i, j in TEAM.items():               #prints the various teams corresponding to their numbers in the map
                     print(f"{i}. {j[1]}")
-                while True:
-                    try:
-                        role = int(input("Kindly enter the role (1-7): "))
-                        if role < 1 or role > 7:
-                            print("Enter a valid role\n")
-                            continue
-                        role = DIVISION[hierarchy.upper()].upper() + TEAM[role][0]
-                        break
-                    except ValueError as e:
-                        try:
-                            logger.error(f"Got error\n{e}\n because {role} was passed as role")
-                        except UnboundLocalError as e:
-                            logger.error(f"No value was assigned to role")
-                        print("Kindly enter an integer between 1 and 7 only")
+                role: int = clean.get_Int(7, 1, "Enter the team number (1 - 7): ")
+                role = DIVISION[hierarchy.upper()].upper() + TEAM[role][0]
             else:
                 role = input("Enter the role_id of the person: ").upper().strip()
             logger.info(f"Role given: {role}")
 
+            #Input email id
             email = input("Kindly enter the email id: ")
             logger.info(f"Email enterred: {email}")
 
             for i, j in FOOD.items():
-                print(f"{i}. {j}")
-            while True:
-                try:
-                    food_preference = int(input("Kindly enter your choice (1-6): "))
-                    food_preference: str = FOOD.get(food_preference)
-                    logger.info(f"Food preference given is {food_preference}")
-                    break
-                except ValueError as e:
-                    print("Kindly enter only valid integers")
-                    logger.error(f"The following error occured:\n{e}", exc_info = True)
-                    print()
-                except KeyError as e:
-                    print("Kindly enter an integer in the specified range")
-                    logger.error(f"The following error occured:\n{e}", exc_info = True)
-                    print()
-
+                print(f"{i}. {j}")                  #prints the food preferences corresponding to their numbers in the map
+            food_preference: int = clean.get_Int(6, 1, "Enter the food preference (1 - 6): ")
+            food_preference: str = FOOD.get(food_preference)
+            logger.info(f"Food preference given is {food_preference}")
             
-            first_name, surname = name.split()[0], name.split()[1]
+            #Splits the name into first name and surname
+            first_name, surname = tuple(name.split())
 
-            curr.execute("insert into employees values(%s, %s, %s, %s, %s, %s, %s, %s, %s)",
+            #writes the data to mysql database
+            curr.execute('''insert into employees(EMP_ID, First_Name, EMP_DOB, ROLE_ID, DOJ,
+                         CONTACT_INFO, EMAIL_ID, SURNAME, FOOD_PREFERENCE)
+                         values(%s, %s, %s, %s, %s, %s, %s, %s, %s)''',
                          (emp_id, first_name, dob, role, doj, contact, email, surname, food_preference))
+
             print("Data inserted successfully") 
         except errors.IntegrityError as e:
             logger.critical(f"The following error occured\n{e}", exc_info = True)
@@ -371,7 +371,7 @@ def update_member(con: connection.MySQLConnection ,curr: cursor.MySQLCursor, emp
         print("The correct employee type was not passed. Kindly consider consulting with the developer")
         return
     print("The student details are: ")
-    print(emp, end = '\n\n')
+    get_member_details(curr, emp.get_empID())
     
     print("Enter the details you want to change:-")
     print("1. DOB")
@@ -380,18 +380,8 @@ def update_member(con: connection.MySQLConnection ,curr: cursor.MySQLCursor, emp
     print("4. Food Preference")
     print("5. Go Back")
 
-    while True:
-        try:
-            chk = int(input("Enter your choice: "))
-            logger.info(f"Value input in check = {chk}")
-            if chk < 1 or chk > 5:
-                print("Kindly only enter your choice from 1 to 5\n")
-            else:
-                break
-        except ValueError as e:
-            logger.exception(f"The exception that occurred was\n{e}\n\n Value passed {chk:}", exc_info = True)
-            print("Kindly ensure you have given an integer only\n")
-    print("\n")
+    chk = clean.get_Int(5, 1, "Enter your choice (1 - 5): ")
+    print()
 
     if chk == 1:
         while True:
@@ -412,6 +402,7 @@ def update_member(con: connection.MySQLConnection ,curr: cursor.MySQLCursor, emp
                 logger.exception(f"The error that occured was\n{e}\n\n DOB passed {dob}", exc_info = True)
                 print("Kindly enter the DOB in correct format\n")
                 con.rollback()
+        print("DOB was successfully updated")
         
     elif chk == 2:
         curr.execute("select * from roles order by role_id")
@@ -473,35 +464,28 @@ def update_member(con: connection.MySQLConnection ,curr: cursor.MySQLCursor, emp
         for i, j in FOOD.items():
             print(f"{i}. {j}")
 
-        while True:
-            try:
-                preference = int(input("Enter the number corresponding to food preference: "))
-                if preference not in FOOD.keys():
-                    print("Kindly enter the correct option")
-                    while True:
-                        a = input("Would you like to enter another? (Y/N): ").strip().upper()
-                        a = a[0]
-                        if a != 'Y' and a != 'N':
-                            print("Kindly enter a valid option")
-                        break
-                    if a == 'Y':
-                        for i, j in FOOD.items():
-                            print(f"{i}. {j}")
-                emp.set_food_choice(FOOD.get(preference))
-                curr.execute("update employee set food_preference = %s where emp_id = %s",
-                             (emp.get_food_choice(), emp.get_empID()))
-                con.commit()
-                print("Food preference updated successfully")
-                break
-            except ValueError as e:
-                logger.exception(f"The error that occured was\n{e}\n\n preference passed {preference}", exc_info = True)
-                print("Kindly enter an integer only\n")
-                con.rollback()
-            except errors.DataError as e:
-                logger.exception(f"Food choice given was\n{e}", exc_info = True)
-                print("There was an error while inserting data into the database")
-                print("Kindly consider contacting your developer")
-                break
+        try:
+            preference = int(input("Enter the number corresponding to food preference: "))
+            if preference not in FOOD.keys():
+                print("Kindly enter the correct option")
+            emp.set_food_choice(FOOD.get(preference))
+            curr.execute("update employees set food_preference = %s where emp_id = %s",
+                         (emp.get_food_choice(), emp.get_empID()))
+            con.commit()
+            print("Food preference updated successfully")
+
+        except errors.DataError as e:
+            logger.exception(f"Food choice given was\n{e}", exc_info = True)
+            print("There was an error while inserting data into the database")
+            print("Kindly consider contacting your developer")
+            con.rollback()
+
+        except errors.DatabaseError as e:
+            logger.exception(f"Food choice given was\n{e}", exc_info = True)
+            print("There was an error while inserting data into the database")
+            print("Kindly consider contacting your developer")
+            con.rollback()
+
         
     elif chk == 5:
         print("Exiting...")
@@ -511,47 +495,24 @@ def update_member(con: connection.MySQLConnection ,curr: cursor.MySQLCursor, emp
 
     print()
     con.rollback()
-    
-
-
-    #To be completed
 
 #main function of the file
-def members_main(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
+def members_main(con: connection.MySQLConnection, curr: cursor.MySQLCursor) -> None:
     logger.debug("Inside Members Module")
     while True:
         print("Select one of the following")
         print("1. Enter New Members")
-        print("2. Print Member Details")
-        print("3. Display Members")
-        print("4. Go back")
-        while True:
-            try:
-                ch = int(input("Enter your choice (1-4): "))
-                logger.info(f"{ch} was input as choice")
-                if ch < 1 or ch > 5:
-                    print("Valid Choices are from 1 to 5 only")
-                    print()
-                else:
-                    break
-            except ValueError:
-                print("Kindly enter a number only")
-                logger.error(f"Instead of valid number, {ch} was enttered")
-                print()
+        print("2. Update Members")
+        print("3. Print Details of Individual Members")
+        print("4. Print Details of All Members")
+        print("5. Display Members")
+        print("6. Go back")
+        ch = clean.get_Int(6,1,"Enter your choice (1 - 6): ")
         print()
 
+        #To enter new members
         if ch == 1:
-            while True:
-                try:
-                    n = int(input("Enter the total number of new members you want to add: "))
-                    logger.info(f"{n} was input to integer")
-                    if n < 0:
-                        print("Kindly enter a positive integer\n")
-                        continue
-                    break
-                except ValueError as e:
-                    print("Please ensure to pass only valid integer\n")
-                    logger.error(f"The following error occured\n{e}", exc_info = True)
+            n = clean.get_natural_num("Enter the number of new members you want to add: ")
 
             try:
                 for i in range(n):
@@ -563,7 +524,23 @@ def members_main(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
                 con.rollback()
             print()
 
+        #To update current members
         elif ch == 2:
+            empid = input("Enter the Student ID of the person: ").upper()
+            if exists(curr, empid):
+                curr.execute('''
+                            select EMP_ID, CONCAT_WS(' ', FIRST_NAME, SURNAME), EMP_DOB, ROLE_ID, DOJ,
+                            CONTACT_INFO, EMAIL_ID, FOOD_PREFERENCE FROM EMPLOYEES WHERE EMP_ID = %s
+                            ''',
+                            (empid,))
+                data = curr.fetchall()
+                emp: Employee = put_emp_data(data)
+                update_member(con, curr, emp)
+            else:
+                print("Employee does not exists. Kindly check whether you have enterred correct employee data")
+
+        #To print member details
+        elif ch == 3:
             empid: str = input("Enter the Student ID of the person: ").strip().upper()
             logger.info(f"{empid} was enttered as the student ID")
             if exists(curr, empid):
@@ -572,7 +549,12 @@ def members_main(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
                 print("The Student Id does not exist")
             print()
 
-        elif ch == 3:
+        #To print details of all members
+        elif ch == 4:
+            get_member_details_all(curr)
+
+        #To display members
+        elif ch == 5:
             print("Please select one of the following:")
             print("1. All the members")
             print("2. Only the OBS")
@@ -580,23 +562,8 @@ def members_main(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
             print("4. Only the Members")
             print("5. Only WIE")
             print("6. Go Back")
-            while True:
-                try:
-                    op = int(input("Enter your choice (1-4): "))
-                    logger.info(f"{op} was input as choice")
-                    if op < 1 or op > 6:
-                        print("Valid Choices are from 1 to 6 only")
-                        print()
-                    else:
-                        break
-                except ValueError:
-                    print("Kindly enter a number only")
-                    try:
-                        logger.error(f"Instead of valid number, {op} was enttered")
-                    except UnboundLocalError as e:
-                        logger.error(f"No value was passed to, so variable op was assigned")
-                    print()
-            print()
+            
+            op = clean.get_Int(6, 1,"Enter your choice (1 - 6): ")
 
             if op == 1:
                 display_members(curr, '*', None)
@@ -608,42 +575,27 @@ def members_main(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
                 print("These are the teams")
                 for i, j in TEAM.items():
                     print(f"{i}. {j[1]}")
-                while True:
-                    try:
-                        team = int(input("Enter the team you want to select: "))
-                        if team < 1 or team > 7:
-                            print("Please enter a number between 1 and 7")
-                            continue
-                        break
-                    except ValueError:
-                        print("Kindly enter an integer only")
+                team = clean.get_Int(7, 1, "Enter the Team Number: ")
                 display_members(curr, team, 'heads')
 
             elif op == 4:
                 print("These are the teams")
                 for i, j in TEAM.items():
                     print(f"{i}. {j[1]}")
-                while True:
-                    try:
-                        team = int(input("Enter the team you want to select: "))
-                        if team < 1 or team > 7:
-                            print("Please enter a number between 1 and 7")
-                            continue
-                        break
-                    except ValueError:
-                        print("Kindly enter an integer only")
+                team = clean.get_Int(7, 1, "Enter the Team Number: ")
                 display_members(curr, team, 'member')
 
             elif op == 5:
                 display_members(curr, None, 'WIE')
 
             elif op == 6:
+                print()
                 pass
 
             else:
-                print("Wrong input")
+                print("Wrong input", end = '\n\n')
 
-        elif ch == 4:
+        elif ch == 6:
             logger.debug("Leaving members.main")
             return
         

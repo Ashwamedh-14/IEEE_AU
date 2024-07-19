@@ -13,7 +13,7 @@ import src.cleaning as clean
 
 #Setting Up the Logger
 LOG_FORMAT = logging.Formatter("%(asctime)s: %(levelname)s: %(filename)s: %(funcName)s\n%(message)s\n")
-file_handle = handlers.TimedRotatingFileHandler("./logs/Attendence.log", "W6")
+file_handle = handlers.TimedRotatingFileHandler("./logs/Attendence.log", "W6")    #essentially delete the logs on 6th day of the week
 file_handle.setFormatter(LOG_FORMAT)
 file_handle.setLevel(logging.DEBUG)
 
@@ -52,11 +52,12 @@ def take_attendence(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
         except UnboundLocalError as e:
             logger.debug("Pressed enter to exit")
 
-        if event == None:
+        if event == '':
             return
         elif event.isnumeric():       #To make sure only numbers are not enterred
             print("There is no distinction. Please provide")
             continue
+
         curr.execute('Select event_id from events where event_id = %s', (event,))      #To see whether such an id exists or not
         res = curr.fetchone()
         logger.info(f"Result from checking for the same Event ID in Database: {res}")
@@ -86,9 +87,10 @@ def take_attendence(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
             reason = None
             
             if presence == 'N':          #If the person is not supposed to be there for that event
+                reason = "Not Applicable"
                 continue
             
-            if presence == "A":                                 #If the person is absent on the event
+            elif presence == "A":                                 #If the person is absent on the event
                 reason = input("What is the reason\n").strip()
                 print()
 
@@ -152,7 +154,7 @@ def count_attendence(curr: cursor.MySQLCursor, employee: Employee) -> float:
     return perc_present
 
 #This function lists attendence of a particular person
-def list_attendence(curr:cursor.MySQLCursor, emp_id: str):
+def list_attendence(curr:cursor.MySQLCursor, emp_id: str) -> None:
     try:
         curr.execute('''SELECT EMP_ID, CONCAT_WS(' ',First_NAME,SURNAME),
                     EMP_DOB, ROLE_ID, DOJ, CONTACT_INFO, EMAIL_ID, FOOD_PREFERENCE
@@ -208,7 +210,7 @@ def list_attendence(curr:cursor.MySQLCursor, emp_id: str):
         print()
 
 #This function is used to list attendence details of all members
-def list_attendence_all(curr: cursor.MySQLCursor):
+def list_attendence_all(curr: cursor.MySQLCursor) -> None:
     curr.execute('select emp_id from employees order by role_id')
     ids = curr.fetchall()
     for i in ids:
@@ -216,7 +218,7 @@ def list_attendence_all(curr: cursor.MySQLCursor):
         print()
 
 #This function is to update the attendence of a particular member
-def update_attendence(curr: cursor.MySQLCursor, empid: str, date: str, upd: str):
+def update_attendence(curr: cursor.MySQLCursor, empid: str, date: str, upd: str) -> None:
     logger.info(f"Date: {date}, Employee ID: {empid}, Update: {upd}")
     if type(date) != str:
         logger.error("Date was not passed as a string")
@@ -233,7 +235,8 @@ def update_attendence(curr: cursor.MySQLCursor, empid: str, date: str, upd: str)
     logger.info(f"Date: {date}, Employee ID: {empid}, Upd: {upd}, Reason: {reason}")
     print("Attendence successfully updated\n")
 
-def attend_main(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
+#main function of this file
+def attend_main(con: connection.MySQLConnection, curr: cursor.MySQLCursor) -> None:
     logger.debug("Inside Attendence Module")
     while True:
         print("Select one of the following:")
@@ -255,6 +258,7 @@ def attend_main(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
                 print("Kindly enter a number only")
         print('\n')
         
+        #To take attendence
         if ch == 1:
             try:
                 logger.debug("Started taking attendence")
@@ -264,7 +268,7 @@ def attend_main(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
                 logger.debug("KeyboardInterrupt was hit")
                 print('\n')
 
-        
+        #To update attendence
         elif ch == 2:
             empid = input("Enter the id of the person: ")
             empid = empid.upper().strip()
@@ -297,6 +301,7 @@ def attend_main(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
                 print("The following exception occurred\n", repr(e))
             con.rollback()
 
+        #To view attendence of a particular Student
         elif ch == 3:
             empid = input("Enter the Student ID: ")
             empid = empid.upper()
@@ -304,6 +309,7 @@ def attend_main(con: connection.MySQLConnection, curr: cursor.MySQLCursor):
             list_attendence(curr, empid)
             print()
 
+        #TO view attendence of all students
         elif ch == 4:
             list_attendence_all(curr)
             print()

@@ -1,3 +1,11 @@
+'''
+Owner :- Ayush Purohit
+Created :- 12th January 2024
+
+This file is the starting point for the whole program.
+'''
+
+
 #built in modules
 from time import sleep
 import logging
@@ -12,17 +20,20 @@ from dotenv import load_dotenv
 import src.attendence as attendence
 import src.members as members
 
-#Setting up the logger
-LOG_FORMAT = logging.Formatter("%(asctime)s: %(levelname)s: %(filename)s\n%(message)s\n") #Specifying the format of output log
-file_handle = handlers.TimedRotatingFileHandler(r'logs/root.log', "W6")
-file_handle.setLevel(logging.DEBUG)
-file_handle.setFormatter(LOG_FORMAT)
-logger = logging.getLogger(__name__)                                            #Creating Logger
-logger.addHandler(file_handle)
-logger.setLevel(logging.DEBUG)                                                  #Setting Log level
-logger.propagate = False
 
-def main():
+#Main function starts here
+def main() -> None:
+
+    #Setting up the logger
+    LOG_FORMAT = logging.Formatter("%(asctime)s: %(levelname)s: %(filename)s\n%(message)s\n") #Specifying the format of output log
+    file_handle = handlers.TimedRotatingFileHandler(r'logs/root.log', "W6")
+    file_handle.setLevel(logging.DEBUG)
+    file_handle.setFormatter(LOG_FORMAT)
+    logger = logging.getLogger(__name__)                                            #Creating Logger
+    logger.addHandler(file_handle)
+    logger.setLevel(logging.DEBUG)                                                  #Setting Log level
+    logger.propagate = False
+
     logger.debug(f"Starting the program {__name__}")
     try:
         #Aesthetics only

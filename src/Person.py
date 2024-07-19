@@ -8,7 +8,7 @@ FOOD: dict[int: str] = {1: "Non-Vegetarian",
                         6: "Unknown"
                         }
 class Person:
-    def __init__(self, name: str, DOB: str | dt.date, food_preference: str):
+    def __init__(self, name: str, DOB: str | dt.date, food_preference: str) -> None:
         '''DOB must be in YYYY-MM-DD format'''
         if type(name) != str or (type(DOB) not in (str, dt.date) and DOB != None) or (food_preference != None and type(food_preference) != str):
             raise TypeError("Incorrect types passed to name or DOB")
@@ -81,7 +81,7 @@ class Person:
         '''
         DOB should be in YYYY-MM-DD format
         '''
-        if DOB not in (str, dt.datetime):
+        if type(DOB) not in (str, dt.datetime):
             raise TypeError("Incorrect type passed to DOB")
         elif type(DOB) == str:
             self.DOB: dt.datetime = dt.datetime.strptime(DOB.strip(), r"%Y-%m-%d")
@@ -161,7 +161,7 @@ class Administrator(Person):
             self.security_key = security_key.strip()
 
 class Employee(Person):
-    def __init__(self, name: str, DOB: str | dt.date, emp_ID: str, DOJ: str | dt.date, role: str, contant_no: int, email: str, food_preference: str):
+    def __init__(self, name: str, DOB: str | dt.date, emp_ID: str, DOJ: str | dt.date, role: str, contant_no: int, email: str, food_preference: str) -> None:
         super().__init__(name, DOB,food_preference)
         if type(emp_ID) != str or type(DOJ) not in (str, dt.date) or type(role) != str or type(contant_no) != int or type(email) != str:
             raise TypeError("Incorrect types passed to arguments, emp_ID, DOJ, role, contact_no or email")
@@ -186,7 +186,7 @@ class Employee(Person):
         
 
     def __str__(self) -> str:
-        return f'''Name: {self.name}\nDOB: {self.DOB}\nEmployee ID: {self.emp_ID}\nDate of Joining: {self.DOJ}\nRole: {self.role}\nEmail: {self.email}\nFood Preference: {self.food_preference}'''
+        return f'''Name: {self.name}\nDOB: {self.DOB}\nEmployee ID: {self.emp_ID}\nDate of Joining: {self.DOJ}\nRole: {self.role}\nEmail: {self.email}\nFood Preference: {FOOD.get(self.food_preference)}'''
 
     def get_empID(self) -> str:
         return self.emp_ID
@@ -197,7 +197,7 @@ class Employee(Person):
         if processing:
             return self.DOJ.strftime(r"%Y-%m-%d")
         else:
-            return self.DOJ.strftime(r"%d-%B-%Y")
+            return self.DOJ.strftime(r"%d %B %Y")
     
     def get_DOJ_dt(self) -> dt.datetime:
         return self.DOJ
@@ -210,7 +210,7 @@ class Employee(Person):
             return "Contact not given"
         return self.contact
     
-    def get_email(self):
+    def get_email(self) -> str:
         return self.email
     
     def set_empID(self, empID: str) -> None:
